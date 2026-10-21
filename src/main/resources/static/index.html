@@ -1,0 +1,3618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <title>医疗小智 - 智能医疗助手平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #eef2f7;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            display: flex;
+            gap: 16px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            background: #0f766e;
+            padding: 20px 16px;
+            color: white;
+        }
+
+        .sidebar-header h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .session-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .session-item {
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fc;
+        }
+
+        .session-item:hover {
+            background: #eef2ff;
+        }
+
+        .session-item.active {
+            background: #ccfbf1;
+            border-left: 3px solid #0f766e;
+        }
+
+        .session-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .session-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1f2937;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .session-time {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .delete-session {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 1rem;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .session-item:hover .delete-session {
+            opacity: 1;
+        }
+
+        .delete-session:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .chat-header {
+            background: #0f766e;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .header-info {
+            flex: 1;
+        }
+
+        .header-info h1 {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .header-info p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.7rem;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-action-btn {
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.16);
+            color: white;
+            padding: 7px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .header-action-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .header-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            background: #f8f9fc;
+        }
+
+        .messages-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-area::-webkit-scrollbar-track {
+            background: #e5e7eb;
+            border-radius: 3px;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        /* 关键修复：消息容器高度自动，不要多余空白 */
+        .message {
+            display: flex;
+            margin-bottom: 8px;
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .message:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .message.assistant .message-avatar {
+            background: #0f766e;
+            margin-right: 8px;
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: #e5e7eb;
+            margin-left: 8px;
+            order: 2;
+        }
+
+        .message-content-wrapper {
+            max-width: 80%;
+            position: relative;
+        }
+
+        .message-bubble {
+            padding: 6px 12px;
+            border-radius: 16px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .message.assistant .message-bubble {
+            background: white;
+            color: #1f2937;
+            border-bottom-left-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 3px;
+        }
+
+        .message.assistant.pending .message-bubble {
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .message-rag-sources {
+            margin-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+        }
+
+        .message-rag-sources summary {
+            cursor: pointer;
+            color: #0f766e;
+            font-size: 0.78rem;
+            font-weight: 600;
+            list-style: none;
+            user-select: none;
+        }
+
+        .message-rag-sources summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .message-rag-sources summary::before {
+            content: "▸";
+            display: inline-block;
+            margin-right: 6px;
+            transition: transform 0.15s ease;
+        }
+
+        .message-rag-sources[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .message-rag-source-content {
+            margin-top: 8px;
+            max-height: 220px;
+            overflow: auto;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            color: #475569;
+            font-size: 0.78rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* 思考过程 - 紧凑 */
+        .thinking-content {
+            color: #9ca3af;
+            font-style: italic;
+            font-size: 0.75rem;
+            border-left: 2px solid #d1d5db;
+            padding-left: 8px;
+            margin-bottom: 4px;
+        }
+
+        /* 正式回答 */
+        .answer-content {
+            color: #1f2937;
+        }
+
+        .message.user .answer-content {
+            color: white;
+        }
+
+        /* 复制按钮 */
+        .copy-btn {
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            padding: 2px 6px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            z-index: 10;
+        }
+
+        .message.assistant .message-content-wrapper:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: #0f766e;
+            border-color: #0f766e;
+            color: white;
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+            opacity: 1;
+        }
+
+        /* 打字光标 */
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #0f766e;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .input-footer {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .quick-questions {
+            padding: 8px 20px;
+            background: #f8f9fc;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            white-space: nowrap;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .quick-questions::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .quick-question {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 5px 12px;
+            font-size: 0.7rem;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .quick-question:hover {
+            background: #0f766e;
+            border-color: #0f766e;
+            color: white;
+        }
+
+        .quick-question.disabled {
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.48);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1100;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .appointment-modal {
+            width: min(680px, 100%);
+            max-height: min(760px, 92vh);
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 22px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h2 {
+            font-size: 1rem;
+            color: #0f172a;
+        }
+
+        .modal-close-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .appointment-form {
+            padding: 18px 22px 22px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-field label {
+            font-size: 0.78rem;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .form-field input,
+        .form-field select {
+            height: 38px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus {
+            border-color: #0f766e;
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.14);
+        }
+
+        .date-picker-field {
+            position: relative;
+        }
+
+        .date-picker-trigger {
+            height: 38px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+            padding: 0 10px;
+            font-size: 0.85rem;
+            color: #0f172a;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .date-picker-trigger:focus {
+            outline: none;
+            border-color: #0f766e;
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.14);
+        }
+
+        .date-picker-trigger.invalid {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.14);
+        }
+
+        .date-picker-trigger:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .field-error {
+            min-height: 16px;
+            color: #dc2626;
+            font-size: 0.72rem;
+            line-height: 1.4;
+        }
+
+        .date-picker-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 320px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.2);
+            padding: 12px;
+            display: none;
+            z-index: 1200;
+        }
+
+        .date-picker-panel.open {
+            display: block;
+        }
+
+        .date-picker-toolbar {
+            display: grid;
+            grid-template-columns: 32px 1fr 1fr 32px;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .date-picker-nav,
+        .date-picker-toolbar select {
+            height: 32px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+            color: #0f172a;
+            cursor: pointer;
+        }
+
+        .date-picker-weekdays,
+        .date-picker-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .date-picker-weekdays span {
+            color: #64748b;
+            font-size: 0.72rem;
+            text-align: center;
+            line-height: 24px;
+        }
+
+        .date-picker-day {
+            height: 32px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #0f172a;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .date-picker-day:hover:not(:disabled) {
+            border-color: #0f766e;
+        }
+
+        .date-picker-day.selected {
+            background: #0f766e;
+            color: white;
+        }
+
+        .date-picker-day:disabled {
+            background: #f1f5f9;
+            color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .form-help {
+            margin-top: 12px;
+            color: #64748b;
+            font-size: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .tool-modal {
+            width: min(760px, 100%);
+            max-height: min(820px, 92vh);
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+        }
+
+        .result-panel {
+            margin-top: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            padding: 12px;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: #0f172a;
+        }
+
+        .result-panel.empty {
+            color: #64748b;
+        }
+
+        .result-panel.loading {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .result-panel.error {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .panel-state-title {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: inherit;
+        }
+
+        .panel-state-detail {
+            color: inherit;
+            opacity: 0.86;
+        }
+
+        .loading-dots::after {
+            content: '';
+            display: inline-block;
+            width: 1.4em;
+            text-align: left;
+            animation: loadingDots 1.2s steps(4, end) infinite;
+        }
+
+        @keyframes loadingDots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75%, 100% { content: '...'; }
+        }
+
+        .appointment-card {
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .appointment-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .appointment-card-title {
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .appointment-card-meta {
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .danger-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .danger-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .rag-textarea {
+            min-height: 92px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+        }
+
+        .rag-textarea:focus {
+            border-color: #0f766e;
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.14);
+        }
+
+        .citation-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .citation-item {
+            border-left: 3px solid #0f766e;
+            background: white;
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+
+        .citation-item a {
+            color: #0f766e;
+            text-decoration: none;
+        }
+
+        .debug-block {
+            margin-top: 10px;
+            max-height: 240px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.75rem;
+        }
+
+        .secondary-btn,
+        .primary-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .secondary-btn {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .primary-btn {
+            background: #0f766e;
+            color: white;
+        }
+
+        .primary-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .attach-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #cbd5e1;
+            border-radius: 50%;
+            background: white;
+            color: #0f766e;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .attach-btn:hover {
+            background: #f0fdfa;
+            border-color: #0f766e;
+        }
+
+        .attach-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .file-preview {
+            margin-top: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 0.78rem;
+        }
+
+        .file-preview img {
+            display: block;
+            max-width: 100%;
+            max-height: 180px;
+            margin-top: 8px;
+            border-radius: 6px;
+            object-fit: contain;
+        }
+
+        .input-area {
+            padding: 10px 20px;
+            background: white;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            background: #f3f4f6;
+            border-radius: 20px;
+            padding: 6px 14px;
+            transition: all 0.3s;
+        }
+
+        .input-wrapper:focus-within {
+            background: white;
+            box-shadow: 0 0 0 2px #0f766e;
+        }
+
+        .message-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.85rem;
+            resize: none;
+            font-family: inherit;
+            min-height: 20px;
+            max-height: 80px;
+            line-height: 1.4;
+            overflow-y: auto;
+        }
+
+        .message-input::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .message-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            background: #0f766e;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .send-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            z-index: 1000;
+            animation: fadeInOut 2s ease;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .app-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .sidebar {
+                width: 100%;
+                height: 180px;
+                order: 2;
+            }
+            .chat-container {
+                order: 1;
+            }
+            .message-content-wrapper {
+                max-width: 85%;
+            }
+            .quick-questions {
+                padding: 6px 16px;
+            }
+            .input-area {
+                padding: 8px 16px;
+            }
+            .messages-area {
+                padding: 12px 16px;
+            }
+            .header-actions {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        [hidden] { display: none !important; }
+        .auth-gate { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:#f8fafc; }
+        .auth-panel { width:min(420px,100%); background:#fff; border:1px solid #dbe3ef; border-radius:12px; padding:28px; box-shadow:0 14px 40px rgba(15,23,42,.08); }
+        .auth-panel h1 { margin:0 0 8px; font-size:1.35rem; color:#0f172a; }
+        .auth-panel p { margin:0 0 22px; color:#64748b; font-size:.9rem; }
+        .auth-field { margin-bottom:14px; }
+        .auth-field label { display:block; margin-bottom:6px; color:#334155; font-size:.85rem; }
+        .auth-field input { width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:8px; padding:11px 12px; font-size:1rem; }
+        .auth-submit { width:100%; border:0; border-radius:8px; padding:11px; background:#0f766e; color:#fff; cursor:pointer; font-size:1rem; }
+        .auth-switch { margin-top:16px; text-align:center; color:#475569; font-size:.85rem; }
+        .auth-switch button { border:0; background:transparent; color:#0f766e; cursor:pointer; }
+        .auth-error { min-height:20px; margin:10px 0 0; color:#b91c1c; font-size:.85rem; }
+        .account-box { display:flex; align-items:center; gap:8px; margin-left:8px; }
+        .account-name { color:#334155; font-size:.82rem; }
+        .account-action { border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:7px; padding:6px 9px; cursor:pointer; }
+    </style>
+</head>
+<body>
+<div class="auth-gate" id="authGate">
+    <form class="auth-panel" id="authForm">
+        <h1 id="authTitle">登录医疗小智</h1>
+        <p id="authSubtitle">登录后可以保存会话并管理个人预约。</p>
+        <div class="auth-field"><label for="authUsername">用户名</label><input id="authUsername" autocomplete="username" required></div>
+        <div class="auth-field"><label for="authPassword">密码</label><input id="authPassword" type="password" autocomplete="current-password" minlength="8" required></div>
+        <button class="auth-submit" id="authSubmit" type="submit">登录</button>
+        <div class="auth-error" id="authError" aria-live="polite"></div>
+        <div class="auth-switch"><span id="authSwitchText">还没有账户？</span><button id="authSwitchBtn" type="button">注册账户</button></div>
+    </form>
+</div>
+<div class="app-container" id="appContainer" hidden>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>📋 历史会话</h3>
+            <button class="new-chat-btn" id="newChatBtn">
+                ✨ 新建会话
+            </button>
+        </div>
+        <div class="session-list" id="sessionList"></div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="avatar">🏥</div>
+            <div class="header-info">
+                <h1>医疗小智 · 医疗助手平台</h1>
+                <p>智能问答 · 分诊建议 · 预约挂号</p>
+            </div>
+            <div class="header-actions">
+                <button class="header-action-btn" id="openMedicalFileBtn" type="button">医学报告</button>
+                <button class="header-action-btn" id="openRagBtn">RAG问答</button>
+                <button class="header-action-btn" id="openAppointmentBtn">预约挂号</button>
+                <button class="header-action-btn" id="openMyAppointmentsBtn">我的预约</button>
+                <button class="header-action-btn" id="clearConversationBtn">清空对话</button>
+                <div class="status">
+                    <div class="status-dot"></div>
+                    <span class="status-text">在线服务中</span>
+                </div>
+                <div class="account-box"><span class="account-name" id="accountName"></span><button class="account-action" id="logoutBtn" type="button">退出</button><button class="account-action" id="deleteAccountBtn" type="button">注销账户</button></div>
+            </div>
+        </div>
+
+        <div class="messages-area" id="messagesArea"></div>
+
+        <div class="input-footer">
+            <div class="quick-questions">
+                <div class="quick-question" data-question="我头痛应该挂什么科？">🤕 头痛应该挂什么科？</div>
+                <div class="quick-question" data-action="appointment">📅 我想预约挂号</div>
+                <div class="quick-question" data-action="rag">📚 RAG医学问答</div>
+                <div class="quick-question" data-question="神经内科有哪些医生？">👨‍⚕️ 神经内科有哪些医生？</div>
+                <div class="quick-question" data-question="医院地址在哪里？">📍 医院地址在哪里？</div>
+                <div class="quick-question" data-action="my-appointments">❌ 查询/取消预约</div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                        <textarea
+                                class="message-input"
+                                id="messageInput"
+                                placeholder="输入您的健康问题..."
+                                rows="1"
+                        ></textarea>
+                </div>
+                <button class="attach-btn" id="attachMedicalFileBtn" type="button" title="上传医学报告" aria-label="上传医学报告">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a3 3 0 1 0 4.2 4.2l7-7a5 5 0 0 0-7.1-7.1l-8 8a7 7 0 1 0 9.9 9.9l6.4-6.4-1.4-1.4-6.4 6.4a5 5 0 1 1-7.1-7.1l8-8a3 3 0 0 1 4.2 4.2l-7 7a1 1 0 1 1-1.4-1.4l8.1-8.1 1.4 1.4Z"/></svg>
+                </button>
+                <button class="send-btn" id="sendBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="medicalFileModal">
+    <div class="tool-modal medical-file-modal">
+        <div class="modal-header">
+            <h2>医学报告上传</h2>
+            <button class="modal-close-btn" id="closeMedicalFileBtn" type="button" aria-label="关闭">×</button>
+        </div>
+        <form class="appointment-form" id="medicalFileForm">
+            <div class="form-field">
+                <label for="medicalFileInput">报告文件</label>
+                <input id="medicalFileInput" name="file" type="file" accept=".pdf,.txt,.png,.jpg,.jpeg,application/pdf,text/plain,image/png,image/jpeg" required>
+                <span class="form-help">支持 PDF、TXT、PNG 和 JPG/JPEG，单个文件不超过 10 MB。</span>
+            </div>
+            <div class="form-field" style="margin-top:14px;">
+                <label for="medicalFileCategory">报告类型</label>
+                <select id="medicalFileCategory" name="category">
+                    <option value="LAB_REPORT">化验报告</option>
+                    <option value="EXAMINATION_REPORT">检查报告</option>
+                    <option value="MEDICAL_IMAGE">医学影像</option>
+                    <option value="MEDICAL_RECORD">病历资料</option>
+                    <option value="OTHER">其他</option>
+                </select>
+            </div>
+            <div class="file-preview" id="medicalFilePreview" hidden></div>
+            <div class="form-actions">
+                <button class="secondary-btn" id="cancelMedicalFileBtn" type="button">取消</button>
+                <button class="primary-btn" id="uploadMedicalFileBtn" type="submit">上传并分析</button>
+            </div>
+            <div class="result-panel empty" id="medicalFileResult">上传后可继续提取文本、结构化和解释报告。</div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="appointmentModal">
+    <div class="appointment-modal">
+        <div class="modal-header">
+            <h2>预约挂号</h2>
+            <button class="modal-close-btn" id="closeAppointmentBtn" type="button">×</button>
+        </div>
+        <form class="appointment-form" id="appointmentForm">
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="appointmentUsername">患者姓名</label>
+                    <input id="appointmentUsername" name="username" autocomplete="name" required>
+                </div>
+                <div class="form-field">
+                    <label for="appointmentIdCard">身份证号</label>
+                    <input id="appointmentIdCard" name="idCard" maxlength="18" autocomplete="off" required>
+                </div>
+                <div class="form-field">
+                    <label for="appointmentPhone">手机号</label>
+                    <input id="appointmentPhone" name="phone" maxlength="11" autocomplete="tel" required>
+                </div>
+                <div class="form-field">
+                    <label for="appointmentDepartment">预约科室</label>
+                    <select id="appointmentDepartment" name="department" required>
+                        <option value="">请选择科室</option>
+                    </select>
+                </div>
+                <div class="form-field date-picker-field">
+                    <label for="appointmentDateDisplay">预约日期</label>
+                    <input id="appointmentDate" name="date" type="hidden">
+                    <button class="date-picker-trigger" id="appointmentDateDisplay" type="button" aria-expanded="false">请选择日期</button>
+                    <span class="field-error" id="appointmentDateError" aria-live="polite"></span>
+                    <div class="date-picker-panel" id="appointmentDatePicker">
+                        <div class="date-picker-toolbar">
+                            <button class="date-picker-nav" id="appointmentPrevMonthBtn" type="button">‹</button>
+                            <select id="appointmentYearSelect" aria-label="选择年份"></select>
+                            <select id="appointmentMonthSelect" aria-label="选择月份"></select>
+                            <button class="date-picker-nav" id="appointmentNextMonthBtn" type="button">›</button>
+                        </div>
+                        <div class="date-picker-weekdays">
+                            <span>日</span>
+                            <span>一</span>
+                            <span>二</span>
+                            <span>三</span>
+                            <span>四</span>
+                            <span>五</span>
+                            <span>六</span>
+                        </div>
+                        <div class="date-picker-days" id="appointmentCalendarDays"></div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="appointmentTimeSlot">预约时间</label>
+                    <select id="appointmentTimeSlot" name="timeSlot" required>
+                        <option value="">请选择时间</option>
+                        <option value="上午">上午</option>
+                        <option value="下午">下午</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="appointmentDoctorName">预约医生</label>
+                    <select id="appointmentDoctorName" name="doctorName" required>
+                        <option value="">请先选择科室、日期和时间</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-help">
+                <span id="appointmentScheduleHint">正在准备可预约号源...</span>
+            </div>
+            <div class="form-actions">
+                <button class="secondary-btn" id="cancelAppointmentFormBtn" type="button">取消</button>
+                <button class="primary-btn" id="submitAppointmentBtn" type="submit">提交预约</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="myAppointmentsModal">
+    <div class="tool-modal">
+        <div class="modal-header">
+            <h2>我的预约</h2>
+            <button class="modal-close-btn" id="closeMyAppointmentsBtn" type="button">×</button>
+        </div>
+        <form class="appointment-form" id="appointmentSearchForm">
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="searchAppointmentUsername">患者姓名</label>
+                    <input id="searchAppointmentUsername" name="username" autocomplete="name" required>
+                </div>
+                <div class="form-field">
+                    <label for="searchAppointmentIdCard">身份证号</label>
+                    <input id="searchAppointmentIdCard" name="idCard" maxlength="18" autocomplete="off" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="secondary-btn" id="closeMyAppointmentsFormBtn" type="button">关闭</button>
+                <button class="primary-btn" id="searchAppointmentBtn" type="submit">查询预约</button>
+            </div>
+            <div class="result-panel empty" id="appointmentSearchResult">请输入患者姓名和身份证号查询当前有效预约。</div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="ragModal">
+    <div class="tool-modal">
+        <div class="modal-header">
+            <h2>RAG 医学问答</h2>
+            <button class="modal-close-btn" id="closeRagBtn" type="button">×</button>
+        </div>
+        <form class="appointment-form" id="ragForm">
+            <div class="form-field">
+                <label for="ragQuery">医学问题</label>
+                <textarea class="rag-textarea" id="ragQuery" name="query" required>糖尿病早期有哪些症状？</textarea>
+            </div>
+            <div class="form-grid" style="margin-top:14px;">
+                <div class="form-field">
+                    <label for="ragRetrievalMode">检索模式</label>
+                    <select id="ragRetrievalMode" name="retrievalMode">
+                        <option value="HYBRID">混合检索</option>
+                        <option value="KEYWORD">关键词检索</option>
+                        <option value="VECTOR">向量检索</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="ragTopK">返回片段数</label>
+                    <select id="ragTopK" name="topK">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="secondary-btn" id="ragContextBtn" type="button">调试上下文</button>
+                <button class="secondary-btn" id="ragEvaluationBtn" type="button">评测报告</button>
+                <button class="primary-btn" id="ragAnswerBtn" type="submit">生成回答</button>
+            </div>
+            <div class="result-panel empty" id="ragResult">RAG 回答会在这里展示，并附带引用来源。</div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // MESSAGE_CACHE_KEY 用来保存当前浏览器里的临时消息展示缓存。
+    const MESSAGE_CACHE_KEY = 'xiaozhi_message_cache_v4';
+    function messageCacheKey() {
+        return currentAccount ? `${MESSAGE_CACHE_KEY}_${currentAccount.id}` : `${MESSAGE_CACHE_KEY}_anonymous`;
+    }
+    // LEGACY_MESSAGE_CACHE_KEYS 用来清理曾经可能保存内部 prompt 的旧缓存。
+    const LEGACY_MESSAGE_CACHE_KEYS = [
+        'xiaozhi_message_cache_v1',
+        'xiaozhi_message_cache_v2',
+        'xiaozhi_message_cache_v3'
+    ];
+    // API_BASE 在后端静态资源模式下使用同源地址，在 file:// 打开时回退到本地 8080。
+    const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:8080' : '';
+    let currentAccount = null;
+    let authMode = 'login';
+    // WELCOME_MESSAGE 是每个新会话第一次打开时展示的本地欢迎语。
+    const WELCOME_MESSAGE = '您好！我是医疗小智，智能医疗助手平台。\n\n我可以为您提供：\n• 医疗咨询和健康科普\n• 症状描述后的科室建议\n• 预约挂号流程辅助\n\n请描述您的问题，我会尽力提供安全、可追溯的帮助。';
+    // sessions 保存后端返回的会话元数据列表。
+    let sessions = [];
+    // currentSessionId 保存当前正在聊天的 memoryId 字符串。
+    let currentSessionId = null;
+    // isWaiting 表示当前是否正在等待模型流式响应。
+    let isWaiting = false;
+    // currentStreamingDiv 保存正在流式更新的助手消息 DOM。
+    let currentStreamingDiv = null;
+    // currentStreamingContent 保存当前流式响应已经收到的文本。
+    let currentStreamingContent = '';
+    // isSubmittingAppointment 表示预约表单是否正在提交。
+    let isSubmittingAppointment = false;
+    // appointmentScheduleOptions 保存后端返回的可预约排班选项。
+    let appointmentScheduleOptions = [];
+    // appointmentSchedulesLoaded 表示当前页面是否已经加载过号源。
+    let appointmentSchedulesLoaded = false;
+    // appointmentCalendarYear 保存预约日历当前展示的年份。
+    let appointmentCalendarYear = new Date().getFullYear();
+    // appointmentCalendarMonth 保存预约日历当前展示的月份，范围是 0 到 11。
+    let appointmentCalendarMonth = new Date().getMonth();
+    // latestAppointmentSearchIdCard 保存最近一次查询预约使用的身份证号，取消预约时复用它做身份校验。
+    let latestAppointmentSearchIdCard = '';
+
+    // renderPanelState 统一渲染工具面板的空、加载、错误状态。
+    function renderPanelState(elementOrId, type, title, detail = '') {
+        // 兼容传入 DOM 节点或节点 ID。
+        const element = typeof elementOrId === 'string' ? document.getElementById(elementOrId) : elementOrId;
+        // 没有节点时直接返回，避免状态提示影响主流程。
+        if (!element) return;
+        // 设置状态样式。
+        element.className = `result-panel ${type || 'empty'}`;
+        // 加载态标题追加动态点。
+        const titleClass = type === 'loading' ? 'panel-state-title loading-dots' : 'panel-state-title';
+        // 写入状态 HTML。
+        element.innerHTML = `<span class="${titleClass}">${escapeHtml(title || '')}</span>${detail ? `<span class="panel-state-detail">${escapeHtml(detail)}</span>` : ''}`;
+    }
+
+    // setButtonBusy 切换按钮忙碌态，并恢复原始文案。
+    function setButtonBusy(buttonOrId, busy, busyText) {
+        // 兼容传入 DOM 节点或节点 ID。
+        const button = typeof buttonOrId === 'string' ? document.getElementById(buttonOrId) : buttonOrId;
+        // 没有按钮时直接返回。
+        if (!button) return;
+        // 第一次进入忙碌态时保存原始文案。
+        if (!button.dataset.idleText) button.dataset.idleText = button.textContent;
+        // 切换禁用状态。
+        button.disabled = busy;
+        // 切换展示文案。
+        button.textContent = busy ? busyText : button.dataset.idleText;
+    }
+
+    // showToast 用来展示轻量提示。
+    function showToast(message) {
+        // 先删除已有提示，避免多个 toast 堆叠。
+        const existingToast = document.querySelector('.toast');
+        // 如果已有 toast，就移除旧节点。
+        if (existingToast) existingToast.remove();
+        // 创建新的提示节点。
+        const toast = document.createElement('div');
+        // 设置提示节点样式类。
+        toast.className = 'toast';
+        // 写入提示文本。
+        toast.textContent = message;
+        // 把提示节点挂到页面上。
+        document.body.appendChild(toast);
+        // 2 秒后自动移除提示。
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    // escapeHtml 用来防止用户输入或模型输出被当成 HTML 执行。
+    function escapeHtml(text) {
+        // 空文本直接返回空字符串。
+        if (!text) return '';
+        // 替换 HTML 敏感字符。
+        return text.replace(/[&<>]/g, function(m) {
+            // 替换 & 字符。
+            if (m === '&') return '&amp;';
+            // 替换 < 字符。
+            if (m === '<') return '&lt;';
+            // 替换 > 字符。
+            if (m === '>') return '&gt;';
+            // 兜底返回原字符。
+            return m;
+        });
+    }
+
+    // formatMessageWithThinking 用来格式化助手消息。
+    function formatMessageWithThinking(content) {
+        // 空内容直接返回空字符串。
+        if (!content) return '';
+        // 移除部分模型可能输出的思考标记。
+        let cleanContent = content.replace(/~~~[\s\S]*?~~~/g, '');
+        // 移除中文思考标签。
+        cleanContent = cleanContent.replace(/【思考】[\s\S]*?【\/思考】/g, '');
+        // 移除以“思考：”开头的行。
+        cleanContent = cleanContent.replace(/^思考[：:][\s\S]*?(?=\n\n|\n?$)/gm, '');
+        // 去掉首尾空白。
+        cleanContent = cleanContent.trim();
+        // 先做 HTML 转义。
+        let formattedAnswer = escapeHtml(cleanContent);
+        // 把换行转换成页面换行。
+        formattedAnswer = formattedAnswer.replace(/\n/g, '<br>');
+        // 保留项目原有的简单项目符号排版。
+        formattedAnswer = formattedAnswer.replace(/• /g, '&nbsp;&nbsp;•&nbsp;');
+        // 支持简单 Markdown 加粗。
+        formattedAnswer = formattedAnswer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // 返回格式化后的 HTML。
+        return formattedAnswer;
+    }
+
+    // extractPureText 用来得到适合复制的纯文本。
+    function extractPureText(content) {
+        // 空内容直接返回空字符串。
+        if (!content) return '';
+        // 移除波浪线思考段。
+        let text = content.replace(/~~~[\s\S]*?~~~/g, '');
+        // 移除中文思考标签。
+        text = text.replace(/【思考】[\s\S]*?【\/思考】/g, '');
+        // 移除思考行。
+        text = text.replace(/^思考[：:][\s\S]*?(?=\n\n|\n?$)/gm, '');
+        // 返回去掉首尾空白后的文本。
+        return text.trim();
+    }
+
+    // apiPayload 封装后端统一响应读取，保留 code/message/data 全量结构。
+    async function apiPayload(path, options = {}) {
+        // 拼出完整请求地址。
+        const response = await fetch(`${API_BASE}${path}`, { credentials: 'include', ...options });
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch (error) {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            throw new Error('服务器返回了无法解析的响应');
+        }
+        if (!response.ok) throw new Error(payload.message || `HTTP ${response.status}`);
+        return payload;
+    }
+
+    // apiJson 封装后端 JSON API 调用，只返回成功响应里的 data。
+    async function apiJson(path, options = {}) {
+        // 读取统一响应结构。
+        const payload = await apiPayload(path, options);
+        // 如果业务响应码不是 0，也视为业务失败。
+        if (payload.code !== 0) throw new Error(payload.message || '接口调用失败');
+        // 返回真正的业务数据。
+        return payload.data;
+    }
+
+    // readMessageCache 读取本地消息缓存。
+    let uploadedMedicalFileId = null;
+    let medicalFilePreviewUrl = null;
+
+    function openMedicalFileModal() {
+        document.getElementById('medicalFileModal').classList.add('open');
+        document.getElementById('medicalFileInput').focus();
+    }
+
+    function renderAuthMode() {
+        const register = authMode === 'register';
+        document.getElementById('authTitle').textContent = register ? '注册医疗小智账户' : '登录医疗小智';
+        document.getElementById('authSubtitle').textContent = register ? '注册后即可保存个人会话和预约记录。' : '登录后可以保存会话并管理个人预约。';
+        document.getElementById('authSubmit').textContent = register ? '注册并登录' : '登录';
+        document.getElementById('authSwitchText').textContent = register ? '已有账户？' : '还没有账户？';
+        document.getElementById('authSwitchBtn').textContent = register ? '返回登录' : '注册账户';
+        document.getElementById('authPassword').setAttribute('autocomplete', register ? 'new-password' : 'current-password');
+    }
+
+    async function loadAuthState() {
+        try {
+            currentAccount = await apiJson('/api/auth/me');
+        } catch (error) {
+            currentAccount = null;
+        }
+        const authenticated = Boolean(currentAccount);
+        document.getElementById('authGate').hidden = authenticated;
+        document.getElementById('appContainer').hidden = !authenticated;
+        if (authenticated) document.getElementById('accountName').textContent = currentAccount.username;
+        return authenticated;
+    }
+
+    async function submitAuth(event) {
+        event.preventDefault();
+        const errorElement = document.getElementById('authError');
+        errorElement.textContent = '';
+        const button = document.getElementById('authSubmit');
+        button.disabled = true;
+        try {
+            currentAccount = await apiJson(`/api/auth/${authMode}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: document.getElementById('authUsername').value, password: document.getElementById('authPassword').value})
+            });
+            document.getElementById('authGate').hidden = true;
+            document.getElementById('appContainer').hidden = false;
+            document.getElementById('accountName').textContent = currentAccount.username;
+            clearLegacyMessageCaches();
+            await loadConversationSessions();
+        } catch (error) {
+            errorElement.textContent = error.message || '操作失败，请稍后重试。';
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    async function logoutAccount() {
+        const previousCacheKey = messageCacheKey();
+        try { await apiJson('/api/auth/logout', {method:'POST'}); } catch (error) { /* local cleanup still applies */ }
+        currentAccount = null;
+        sessions = [];
+        currentSessionId = null;
+        localStorage.removeItem(previousCacheKey);
+        document.getElementById('appContainer').hidden = true;
+        document.getElementById('authGate').hidden = false;
+        document.getElementById('authPassword').value = '';
+        renderAuthMode();
+    }
+
+    async function deleteAccount() {
+        if (!window.confirm('注销账户会删除该账户的会话、预约和相关数据，且无法恢复。确定继续吗？')) return;
+        const previousCacheKey = messageCacheKey();
+        try {
+            await apiJson('/api/auth/account', {method:'DELETE'});
+            currentAccount = null;
+            sessions = [];
+            currentSessionId = null;
+        localStorage.removeItem(messageCacheKey());
+            document.getElementById('appContainer').hidden = true;
+            document.getElementById('authGate').hidden = false;
+            showToast('账户已注销');
+        } catch (error) { showToast(error.message || '注销失败'); }
+    }
+
+    function closeMedicalFileModal() {
+        document.getElementById('medicalFileModal').classList.remove('open');
+    }
+
+    function formatFileSize(bytes) {
+        if (!Number.isFinite(bytes) || bytes < 1024) return `${bytes || 0} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function renderMedicalFilePreview(file) {
+        const preview = document.getElementById('medicalFilePreview');
+        if (medicalFilePreviewUrl) URL.revokeObjectURL(medicalFilePreviewUrl);
+        medicalFilePreviewUrl = null;
+        if (!file) {
+            preview.hidden = true;
+            preview.innerHTML = '';
+            return;
+        }
+        preview.hidden = false;
+        preview.innerHTML = `<strong>${escapeHtml(file.name)}</strong> · ${formatFileSize(file.size)}`;
+        if (file.type.startsWith('image/')) {
+            medicalFilePreviewUrl = URL.createObjectURL(file);
+            preview.insertAdjacentHTML('beforeend', `<img src="${medicalFilePreviewUrl}" alt="Selected medical report preview">`);
+        }
+    }
+
+    function renderMedicalFileResult(title, detail, data, state = '') {
+        const result = document.getElementById('medicalFileResult');
+        result.className = `result-panel${state ? ` ${state}` : ''}`;
+        const json = data ? `<pre class="debug-block">${escapeHtml(JSON.stringify(data, null, 2))}</pre>` : '';
+        result.innerHTML = `<strong class="panel-state-title">${escapeHtml(title)}</strong><span class="panel-state-detail">${escapeHtml(detail)}</span>${json}`;
+    }
+
+    async function handleMedicalFileUpload(event) {
+        event.preventDefault();
+        const input = document.getElementById('medicalFileInput');
+        const file = input.files[0];
+        if (!file) {
+            showToast('请先选择医学报告');
+            return;
+        }
+        const button = document.getElementById('uploadMedicalFileBtn');
+        setButtonBusy(button, true, '上传中');
+        renderMedicalFileResult('正在上传报告', '正在校验并安全保存文件。', null, 'loading');
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('category', document.getElementById('medicalFileCategory').value);
+            const uploaded = await apiJson('/xiaozhi/medical-files', { method: 'POST', body: formData });
+            uploadedMedicalFileId = uploaded.fileId;
+            renderMedicalFileResult('Upload complete', `${uploaded.originalFilename || file.name} · ${formatFileSize(uploaded.size)} · ${uploaded.fileId}`, uploaded);
+            document.getElementById('medicalFileResult').insertAdjacentHTML('beforeend', `
+                <div class="form-actions" style="justify-content:flex-start;">
+                    <button class="secondary-btn file-operation-btn" type="button" data-operation="extract-text">提取文本</button>
+                    <button class="secondary-btn file-operation-btn" type="button" data-operation="structure">结构化报告</button>
+                    <button class="primary-btn file-operation-btn" type="button" data-operation="interpret">解释报告</button>
+                </div>`);
+        } catch (error) {
+            console.error('Medical report upload failed:', error);
+            renderMedicalFileResult('上传失败', error.message || '报告上传失败，请稍后重试。', null, 'error');
+        } finally {
+            setButtonBusy(button, false, '上传并分析');
+        }
+    }
+
+    async function runMedicalFileOperation(operation) {
+        if (!uploadedMedicalFileId) return;
+        const result = document.getElementById('medicalFileResult');
+        renderMedicalFileResult('正在分析报告', '正在执行所选分析操作。', null, 'loading');
+        try {
+            const data = await apiJson(`/xiaozhi/medical-files/${encodeURIComponent(uploadedMedicalFileId)}/${operation}`, { method: 'POST' });
+            renderMedicalFileResult('分析完成', operation === 'extract-text' ? (data.text || '未提取到文本。') : '结构化结果如下。', data);
+        } catch (error) {
+            console.error(`Medical report ${operation} failed:`, error);
+            renderMedicalFileResult('分析不可用', error.message || '报告分析失败，请稍后重试。', null, 'error');
+        }
+    }
+
+    function readMessageCache() {
+        // 读取 localStorage 原始字符串。
+        const raw = localStorage.getItem(messageCacheKey());
+        // 如果没有缓存，就返回空对象。
+        if (!raw) return {};
+        // 解析缓存；异常时兜底为空对象。
+        try {
+            // 返回解析后的缓存对象。
+            return JSON.parse(raw);
+        } catch (error) {
+            // 解析失败时删除坏缓存。
+            localStorage.removeItem(previousCacheKey);
+            // 返回空对象避免页面崩溃。
+            return {};
+        }
+    }
+
+    // writeMessageCache 写入本地消息缓存。
+    function writeMessageCache(cache) {
+        // 把缓存对象序列化到 localStorage。
+        localStorage.setItem(messageCacheKey(), JSON.stringify(cache));
+    }
+
+    // clearLegacyMessageCaches 确定性删除旧版消息缓存，避免内部 prompt 再次进入页面。
+    function clearLegacyMessageCaches() {
+        // 遍历并删除所有已知旧缓存键。
+        LEGACY_MESSAGE_CACHE_KEYS.forEach(key => localStorage.removeItem(key));
+    }
+
+    // normalizeSession 把后端会话元数据转换成前端稳定结构。
+    function normalizeSession(session) {
+        // 返回前端使用的会话对象。
+        return {
+            // id 统一使用字符串，便于和 DOM dataset 对比。
+            id: String(session.memoryId),
+            // title 优先使用后端标题。
+            title: session.title || '新对话',
+            // createdAt 保留后端创建时间。
+            createdAt: session.createdAt,
+            // updatedAt 保留后端更新时间。
+            updatedAt: session.updatedAt
+        };
+    }
+
+    // getMessages 返回指定会话的本地消息缓存。
+    function getMessages(sessionId) {
+        // 读取完整缓存。
+        const cache = readMessageCache();
+        // 如果当前会话有消息缓存，清洗后补齐固定欢迎语。
+        if (cache[sessionId]) return withWelcomeMessage(sanitizeMessagesForDisplay(cache[sessionId]));
+        // 没有缓存时返回默认欢迎语。
+        return withWelcomeMessage([]);
+    }
+
+    // saveMessages 保存指定会话的本地消息缓存。
+    function saveMessages(sessionId, messages) {
+        // 读取完整缓存。
+        const cache = readMessageCache();
+        // 写入当前会话消息。
+        cache[sessionId] = messages;
+        // 保存完整缓存。
+        writeMessageCache(cache);
+    }
+
+    // backendMessageToLocal 把后端消息 DTO 转换成本地渲染结构。
+    function backendMessageToLocal(message) {
+        // 返回前端消息对象。
+        return {
+            // role 只允许 user 或 assistant，未知角色兜底为 assistant。
+            role: message.role === 'user' ? 'user' : 'assistant',
+            // content 规整为空字符串兜底，避免渲染时报错。
+            content: String(message.content || ''),
+            // ragContext 是后端从内部增强 prompt 中剥离出的检索来源。
+            ragContext: String(message.ragContext || ''),
+            // timestamp 使用后端序号，缺失时使用当前时间。
+            timestamp: Number(message.timestamp || Date.now())
+        };
+    }
+
+    // sanitizeMessagesForDisplay 清洗本地缓存中的旧版内部 prompt。
+    function sanitizeMessagesForDisplay(messages) {
+        // 不是数组时兜底为空数组。
+        if (!Array.isArray(messages)) return [];
+        // 创建结果列表。
+        const sanitized = [];
+        // 暂存从旧版用户气泡里剥离出的 RAG 来源。
+        let pendingRagContext = '';
+        // 遍历消息。
+        for (const message of messages) {
+            // 规整消息角色和内容。
+            const role = message && message.role === 'user' ? 'user' : 'assistant';
+            const content = String(message && message.content || '');
+            // 过滤系统提示词。
+            if (looksLikeInternalPrompt(content)) continue;
+            // 如果旧本地缓存里有完整 RAG 增强 prompt，就拆成原始问题和折叠来源。
+            const markerIndex = content.indexOf('Answer using the following information:');
+            if (role === 'user' && markerIndex >= 0) {
+                const userQuestion = content.substring(0, markerIndex).trim();
+                pendingRagContext = cleanRagContext(content.substring(markerIndex));
+                if (userQuestion) sanitized.push({ ...message, role, content: userQuestion, ragContext: '' });
+                continue;
+            }
+            // 把待展示来源挂到下一条助手消息。
+            if (role === 'assistant' && pendingRagContext) {
+                sanitized.push({ ...message, role, content, ragContext: pendingRagContext });
+                pendingRagContext = '';
+                continue;
+            }
+            // 其他消息保留。
+            sanitized.push({ ...message, role, content, ragContext: String(message && message.ragContext || '') });
+        }
+        // 返回清洗后的消息。
+        return sanitized;
+    }
+
+    // withWelcomeMessage 确保每个会话展示历史都以固定欢迎语开头。
+    function withWelcomeMessage(messages) {
+        // 清理历史中可能重复存在的欢迎语。
+        const withoutDuplicateWelcome = (Array.isArray(messages) ? messages : [])
+                .filter(message => String(message && message.content || '').trim() !== WELCOME_MESSAGE.trim());
+        // 固定使用稳定时间戳，避免每次渲染产生不同 DOM ID。
+        const welcomeMessage = {
+            role: 'assistant',
+            content: WELCOME_MESSAGE,
+            ragContext: '',
+            timestamp: 0
+        };
+        // 欢迎语始终位于第一条，后面才是持久化会话历史。
+        return [welcomeMessage, ...withoutDuplicateWelcome];
+    }
+
+    // looksLikeInternalPrompt 判断前端缓存里的消息是否像系统提示词。
+    function looksLikeInternalPrompt(content) {
+        // 规整文本。
+        const text = String(content || '').trim();
+        // 空文本不算内部提示词。
+        if (!text) return false;
+        // 命中系统提示词特征时过滤。
+        return text.startsWith('# 医疗小智系统提示词')
+                || text.includes('你是“医疗小智”')
+                || text.includes('你不是医生，不能替代医生诊断');
+    }
+
+    // cleanRagContext 去掉 LangChain4j 默认增强 prompt 的说明行。
+    function cleanRagContext(content) {
+        // 清理英文说明，只保留来源正文。
+        return String(content || '')
+                .replace(/^\s*Answer using the following information:\s*/i, '')
+                .trim();
+    }
+
+    // attachRagContextToAssistant 把历史消息中的 RAG 来源挂到下一条助手消息上。
+    function attachRagContextToAssistant(messages) {
+        // 创建最终消息列表。
+        const finalMessages = [];
+        // 暂存从用户增强 prompt 中剥离出的 RAG 来源。
+        let pendingRagContext = '';
+        // 遍历后端历史消息。
+        for (const message of messages) {
+            // 用户消息携带 RAG 来源时，只展示原始问题，来源暂存给下一条助手消息。
+            if (message.role === 'user' && message.ragContext) {
+                pendingRagContext = cleanRagContext(message.ragContext);
+                finalMessages.push({ ...message, ragContext: '' });
+                continue;
+            }
+            // 下一条助手消息出现时，把来源挂到助手回答下。
+            if (message.role === 'assistant' && pendingRagContext) {
+                finalMessages.push({ ...message, ragContext: pendingRagContext });
+                pendingRagContext = '';
+                continue;
+            }
+            // 其他消息原样保留。
+            finalMessages.push(message);
+        }
+        // 返回整理后的展示消息。
+        return finalMessages;
+    }
+
+    // loadConversationMessages 从后端加载指定会话的聊天历史。
+    async function loadConversationMessages(sessionId) {
+        // 没有会话 ID 时直接返回。
+        if (!sessionId) return;
+        // 尝试读取后端持久化消息。
+        try {
+            // 调用会话消息查询接口。
+            const data = await apiJson(`/xiaozhi/conversations/${encodeURIComponent(sessionId)}/messages`);
+            // 转换后端消息为本地渲染结构。
+            const messages = attachRagContextToAssistant(
+                    (data || []).map(backendMessageToLocal).filter(message => message.content.trim() !== '')
+            );
+            // 无论后端是否已有历史，每个会话都保留固定首条欢迎语。
+            const finalMessages = withWelcomeMessage(messages);
+            // 用后端历史覆盖本地缓存。
+            replaceMessages(sessionId, finalMessages);
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('加载会话消息失败:', error);
+            // 后端历史读取失败时保留本地缓存，不打断用户切换会话。
+            showToast('会话历史加载失败，已显示本地缓存');
+        }
+    }
+
+    // buildSessionTitleFromContent 根据第一条用户消息生成会话标题。
+    function buildSessionTitleFromContent(content) {
+        // 去掉用户输入首尾空白。
+        const normalized = String(content || '').trim();
+        // 空内容使用默认标题。
+        if (!normalized) return '新对话';
+        // 长标题截断到 20 个字符，适配侧边栏宽度。
+        return normalized.length > 20 ? `${normalized.substring(0, 20)}...` : normalized;
+    }
+
+    // persistSessionTitleFromMessage 把首条用户消息保存为后端会话标题。
+    async function persistSessionTitleFromMessage(content) {
+        // 读取当前会话。
+        const session = getCurrentSession();
+        // 没有会话时直接返回。
+        if (!session) return;
+        // 已经有非默认标题时不覆盖用户已有标题。
+        if (session.title && session.title !== '新对话') return;
+        // 根据用户消息生成标题。
+        const title = buildSessionTitleFromContent(content);
+        // 默认标题不需要请求后端。
+        if (title === '新对话') return;
+        // 先在前端乐观更新标题。
+        session.title = title;
+        // 立即刷新侧边栏。
+        renderSessionList();
+        // 尝试持久化到后端。
+        try {
+            // 调用标题更新接口。
+            const data = await apiJson(`/xiaozhi/conversations/${encodeURIComponent(session.id)}`, {
+                // 使用 PATCH 方法。
+                method: 'PATCH',
+                // 请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 写入标题请求体。
+                body: JSON.stringify({ title })
+            });
+            // 用后端返回的会话元数据更新前端列表。
+            sessions = sessions.map(item => item.id === session.id ? normalizeSession(data) : item);
+            // 刷新侧边栏。
+            renderSessionList();
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('更新会话标题失败:', error);
+        }
+    }
+
+    // replaceMessages 用新消息列表替换当前会话展示内容。
+    function replaceMessages(sessionId, messages) {
+        // 保存指定会话消息。
+        saveMessages(sessionId, messages);
+        // 如果替换的是当前会话，就刷新消息区域。
+        if (sessionId === currentSessionId) renderMessages();
+    }
+
+    // removeMessageCache 删除指定会话的本地消息缓存。
+    function removeMessageCache(sessionId) {
+        // 读取完整缓存。
+        const cache = readMessageCache();
+        // 删除当前会话缓存。
+        delete cache[sessionId];
+        // 保存完整缓存。
+        writeMessageCache(cache);
+    }
+
+    // displayTitle 返回侧边栏里展示的会话标题。
+    function displayTitle(session) {
+        // 读取当前会话的本地消息。
+        const messages = getMessages(session.id);
+        // 找到第一条用户消息。
+        const firstUserMessage = messages.find(message => message.role === 'user');
+        // 如果后端标题还是默认标题，就用第一条用户消息临时生成一个浏览器侧标题。
+        if (firstUserMessage && session.title === '新对话') {
+            // 截取前 20 个字符作为临时标题。
+            return firstUserMessage.content.length > 20 ? `${firstUserMessage.content.substring(0, 20)}...` : firstUserMessage.content;
+        }
+        // 返回后端标题。
+        return session.title;
+    }
+
+    // formatSessionTime 格式化会话时间。
+    function formatSessionTime(session) {
+        // 优先使用 updatedAt。
+        const value = session.updatedAt || session.createdAt;
+        // 没有时间时返回占位文本。
+        if (!value) return '刚刚';
+        // 尝试解析时间。
+        const date = new Date(value);
+        // 解析失败时返回占位文本。
+        if (Number.isNaN(date.getTime())) return '刚刚';
+        // 返回本地化时间。
+        return date.toLocaleString();
+    }
+
+    // getCurrentSession 返回当前会话元数据。
+    function getCurrentSession() {
+        // 在会话列表中查找当前会话。
+        return sessions.find(session => session.id === currentSessionId);
+    }
+
+    // setBusy 切换页面等待状态。
+    function setBusy(busy) {
+        // 保存等待状态。
+        isWaiting = busy;
+        // 禁用或启用发送按钮，并切换忙碌文案。
+        setButtonBusy('sendBtn', busy, '发送中');
+        // 禁用或启用输入框，防止用户误以为可以继续发送。
+        document.getElementById('messageInput').disabled = busy;
+        // 禁用或启用新会话按钮。
+        document.getElementById('newChatBtn').disabled = busy;
+        // 禁用或启用清空对话按钮。
+        document.getElementById('clearConversationBtn').disabled = busy;
+        // 禁用或启用预约挂号按钮。
+        document.getElementById('openAppointmentBtn').disabled = busy;
+        // 禁用或启用我的预约按钮。
+        document.getElementById('openMyAppointmentsBtn').disabled = busy;
+        // 禁用或启用 RAG 问答按钮。
+        document.getElementById('openRagBtn').disabled = busy;
+        // 禁用或启用快捷问题入口。
+        document.querySelectorAll('.quick-question').forEach(el => el.classList.toggle('disabled', busy));
+    }
+
+    // copyToClipboard 复制助手消息。
+    async function copyToClipboard(text, messageId) {
+        // 尝试调用浏览器剪贴板 API。
+        try {
+            // 写入剪贴板。
+            await navigator.clipboard.writeText(text);
+            // 找到当前复制按钮。
+            const btn = document.querySelector(`.copy-btn[data-msg-id="${messageId}"]`);
+            // 如果按钮存在，就展示已复制状态。
+            if (btn) {
+                // 添加已复制样式。
+                btn.classList.add('copied');
+                // 改成成功文案。
+                btn.innerHTML = '✓ 已复制';
+                // 2 秒后恢复。
+                setTimeout(() => {
+                    // 移除已复制样式。
+                    btn.classList.remove('copied');
+                    // 恢复复制文案。
+                    btn.innerHTML = '复制';
+                }, 2000);
+            }
+            // 展示提示。
+            showToast('已复制');
+        } catch (err) {
+            // 复制失败时展示提示。
+            showToast('复制失败');
+        }
+    }
+
+    // autoResizeTextarea 自动调整输入框高度。
+    function autoResizeTextarea() {
+        // 读取输入框。
+        const textarea = document.getElementById('messageInput');
+        // 先重置高度。
+        textarea.style.height = 'auto';
+        // 计算不超过上限的新高度。
+        const newHeight = Math.min(textarea.scrollHeight, 80);
+        // 应用新高度。
+        textarea.style.height = `${newHeight}px`;
+    }
+
+    // renderMessages 渲染当前会话的消息列表。
+    function renderMessages() {
+        // 当前没有会话时直接返回。
+        if (!currentSessionId) return;
+        // 获取消息区域 DOM。
+        const messagesArea = document.getElementById('messagesArea');
+        // 读取当前会话消息。
+        const messages = getMessages(currentSessionId);
+        // 准备 HTML 字符串。
+        let html = '';
+        // 遍历每一条消息。
+        for (let i = 0; i < messages.length; i++) {
+            // 读取当前消息。
+            const msg = messages[i];
+            // 构造复制按钮使用的消息 ID。
+            const msgId = `${currentSessionId}_${i}_${msg.timestamp}`;
+            // 如果是助手消息，就渲染左侧气泡。
+            if (msg.role === 'assistant') {
+                // 提取纯文本用于复制。
+                const pureText = extractPureText(msg.content);
+                // 格式化展示 HTML。
+                const displayHtml = formatMessageWithThinking(msg.content);
+                // RAG 来源默认折叠在助手回答下。
+                const ragSourcesHtml = renderMessageRagSources(msg.ragContext);
+                // 拼接助手消息 HTML。
+                html += `
+                        <div class="message assistant">
+                            <div class="message-avatar">医</div>
+                            <div class="message-content-wrapper">
+                                <div class="message-bubble">${displayHtml}${ragSourcesHtml}</div>
+                                <button class="copy-btn" data-msg-id="${msgId}" data-copy-text="${escapeHtml(pureText).replace(/"/g, '&quot;')}">复制</button>
+                            </div>
+                        </div>
+                    `;
+            } else {
+                // 拼接用户消息 HTML。
+                html += `
+                        <div class="message user">
+                            <div class="message-content-wrapper">
+                                <div class="message-bubble">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>
+                            </div>
+                            <div class="message-avatar">我</div>
+                        </div>
+                    `;
+            }
+        }
+        // 把消息 HTML 写入页面。
+        messagesArea.innerHTML = html;
+        // 给复制按钮绑定点击事件。
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            // 监听复制按钮点击。
+            btn.addEventListener('click', (e) => {
+                // 阻止事件冒泡。
+                e.stopPropagation();
+                // 读取要复制的文本。
+                const text = btn.dataset.copyText;
+                // 读取消息 ID。
+                const msgId = btn.dataset.msgId;
+                // 有文本时执行复制。
+                if (text) copyToClipboard(text, msgId);
+            });
+        });
+        // 滚动到底部。
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    // renderMessageRagSources 渲染助手消息下的折叠 RAG 来源。
+    function renderMessageRagSources(ragContext) {
+        // 没有 RAG 来源时不渲染。
+        if (!ragContext || !String(ragContext).trim()) return '';
+        // 返回 details 折叠块。
+        return `
+                <details class="message-rag-sources">
+                    <summary>查看回答来源</summary>
+                    <div class="message-rag-source-content">${escapeHtml(ragContext)}</div>
+                </details>
+            `;
+    }
+
+    // updateStreamingMessage 更新流式助手消息。
+    function updateStreamingMessage(content) {
+        // 获取消息区域 DOM。
+        const messagesArea = document.getElementById('messagesArea');
+        // 如果还没有流式消息 DOM，就创建一个。
+        if (!currentStreamingDiv) {
+            // 创建助手消息节点。
+            currentStreamingDiv = document.createElement('div');
+            // 设置助手消息样式类。
+            currentStreamingDiv.className = 'message assistant';
+            // 写入助手消息结构。
+            currentStreamingDiv.innerHTML = `
+                    <div class="message-avatar">医</div>
+                    <div class="message-content-wrapper">
+                        <div class="message-bubble"></div>
+                        <button class="copy-btn" style="opacity:0; pointer-events:none;">复制</button>
+                    </div>
+                `;
+            // 挂到消息区域末尾。
+            messagesArea.appendChild(currentStreamingDiv);
+        }
+        // 找到气泡 DOM。
+        const bubble = currentStreamingDiv.querySelector('.message-bubble');
+        // 格式化流式内容。
+        const displayHtml = formatMessageWithThinking(content);
+        // 写入内容和打字光标。
+        bubble.innerHTML = `${displayHtml}<span class="typing-cursor"></span>`;
+        // 滚动到底部。
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    // finishStreamingMessage 把流式消息落入本地消息缓存。
+    function finishStreamingMessage(content) {
+        // 空内容不保存，但要移除临时等待气泡。
+        if (!content || content.trim() === '') {
+            // 如果流式 DOM 存在，就移除临时节点。
+            if (currentStreamingDiv) {
+                // 移除流式节点。
+                currentStreamingDiv.remove();
+                // 清空引用。
+                currentStreamingDiv = null;
+            }
+            // 结束保存流程。
+            return;
+        }
+        // 读取当前消息列表。
+        const messages = getMessages(currentSessionId);
+        // 追加助手消息。
+        messages.push({ role: 'assistant', content: content, timestamp: Date.now() });
+        // 保存当前会话消息。
+        saveMessages(currentSessionId, messages);
+        // 如果流式 DOM 存在，就移除临时节点。
+        if (currentStreamingDiv) {
+            // 移除流式节点。
+            currentStreamingDiv.remove();
+            // 清空引用。
+            currentStreamingDiv = null;
+        }
+        // 重新渲染完整消息列表。
+        renderMessages();
+    }
+
+    // addUserMessageAndSave 添加用户消息。
+    function addUserMessageAndSave(content) {
+        // 读取当前消息列表。
+        const messages = getMessages(currentSessionId);
+        // 追加用户消息。
+        messages.push({ role: 'user', content: content, timestamp: Date.now() });
+        // 保存当前会话消息。
+        saveMessages(currentSessionId, messages);
+        // 尝试把第一条用户消息持久化成会话标题。
+        persistSessionTitleFromMessage(content);
+        // 重新渲染侧边栏，让本地临时标题及时更新。
+        renderSessionList();
+        // 重新渲染消息区。
+        renderMessages();
+    }
+
+    // addAssistantMessageAndSave 添加一条本地助手消息。
+    function addAssistantMessageAndSave(content) {
+        // 读取当前消息列表。
+        const messages = getMessages(currentSessionId);
+        // 追加助手消息。
+        messages.push({ role: 'assistant', content: content, timestamp: Date.now() });
+        // 保存当前会话消息。
+        saveMessages(currentSessionId, messages);
+        // 重新渲染消息区。
+        renderMessages();
+    }
+
+    // renderSessionList 渲染后端会话列表。
+    function renderSessionList() {
+        // 获取会话列表容器。
+        const container = document.getElementById('sessionList');
+        // 如果没有任何会话，就展示空状态。
+        if (sessions.length === 0) {
+            // 写入空状态。
+            container.innerHTML = '<div style="padding:16px;color:#6b7280;font-size:0.8rem;">暂无会话，点击上方“新建会话”开始。</div>';
+            // 结束渲染。
+            return;
+        }
+        // 拼接会话列表 HTML。
+        container.innerHTML = sessions.map(session => `
+                <div class="session-item ${session.id === currentSessionId ? 'active' : ''}" data-id="${session.id}">
+                    <div class="session-info">
+                        <div class="session-title">${escapeHtml(displayTitle(session))}</div>
+                        <div class="session-time">${escapeHtml(formatSessionTime(session))}</div>
+                    </div>
+                    <button class="delete-session" data-id="${session.id}" title="删除会话">删除</button>
+                </div>
+            `).join('');
+        // 给每个会话项绑定切换事件。
+        document.querySelectorAll('.session-item').forEach(el => {
+            // 监听会话项点击。
+            el.addEventListener('click', (e) => {
+                // 删除按钮自己处理点击，这里只处理切换。
+                if (!e.target.classList.contains('delete-session')) switchSession(el.dataset.id);
+            });
+        });
+        // 给每个删除按钮绑定删除事件。
+        document.querySelectorAll('.delete-session').forEach(btn => {
+            // 监听删除按钮点击。
+            btn.addEventListener('click', (e) => {
+                // 阻止触发会话切换。
+                e.stopPropagation();
+                // 删除指定会话。
+                deleteSession(btn.dataset.id);
+            });
+        });
+    }
+
+    // switchSession 切换当前会话。
+    async function switchSession(sessionId) {
+        // 如果正在流式输出，就移除临时流式节点。
+        if (currentStreamingDiv) {
+            // 移除流式节点。
+            currentStreamingDiv.remove();
+            // 清空引用。
+            currentStreamingDiv = null;
+        }
+        // 清空流式内容。
+        currentStreamingContent = '';
+        // 保存当前会话 ID。
+        currentSessionId = sessionId;
+        // 恢复非等待状态。
+        setBusy(false);
+        // 切换期间只显示固定欢迎语，避免旧浏览器缓存中的内部 prompt 短暂闪现。
+        document.getElementById('messagesArea').innerHTML = `
+                <div class="message assistant">
+                    <div class="message-avatar">医</div>
+                    <div class="message-content-wrapper">
+                        <div class="message-bubble">${escapeHtml(WELCOME_MESSAGE).replace(/\n/g, '<br>')}</div>
+                    </div>
+                </div>
+            `;
+        // 渲染会话列表。
+        renderSessionList();
+        // 从后端加载当前会话的真实历史。
+        await loadConversationMessages(sessionId);
+    }
+
+    // loadConversationSessions 从后端加载会话列表。
+    async function loadConversationSessions() {
+        // 展示加载状态。
+        document.getElementById('sessionList').innerHTML = '<div style="padding:16px;color:#2563eb;font-size:0.8rem;">正在加载会话...</div>';
+        // 请求后端会话列表。
+        const data = await apiJson('/xiaozhi/conversations');
+        // 转换成前端结构。
+        sessions = (data || []).map(normalizeSession);
+        // 如果后端还没有会话，就自动创建一个。
+        if (sessions.length === 0) {
+            // 调用后端创建默认会话。
+            await createNewSession(false);
+            // 结束加载流程。
+            return;
+        }
+        // 如果当前会话不存在，就选中第一条。
+        if (!currentSessionId || !sessions.some(session => session.id === currentSessionId)) {
+            // 默认选中最近会话。
+            currentSessionId = sessions[0].id;
+        }
+        // 切换到当前会话并加载历史消息。
+        await switchSession(currentSessionId);
+    }
+
+    // createNewSession 调用后端创建会话。
+    async function createNewSession(showSuccessToast = true, forceCreate = false) {
+        // 防止用户重复点击；内部兜底创建可以通过 forceCreate 放行。
+        if (isWaiting && !forceCreate) return;
+        // 设置等待状态。
+        setBusy(true);
+        // 尝试调用后端创建接口。
+        try {
+            // 调用创建会话 API。
+            const data = await apiJson('/xiaozhi/conversations', {
+                // 使用 POST 方法。
+                method: 'POST',
+                // 告诉后端请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 新会话暂时使用默认标题。
+                body: JSON.stringify({ title: '新对话' })
+            });
+            // 转换后端返回的会话。
+            const session = normalizeSession(data);
+            // 把新会话放到列表顶部。
+            sessions = [session, ...sessions.filter(item => item.id !== session.id)];
+            // 保存默认欢迎消息。
+            saveMessages(session.id, [{ role: 'assistant', content: WELCOME_MESSAGE, timestamp: Date.now() }]);
+            // 切换到新会话。
+            await switchSession(session.id);
+            // 需要时提示创建成功。
+            if (showSuccessToast) showToast('已创建新会话');
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('创建会话失败:', error);
+            // 给用户展示失败提示。
+            showToast('创建会话失败，请确认后端服务已启动');
+        } finally {
+            // 恢复非等待状态。
+            setBusy(false);
+            // 聚焦输入框。
+            document.getElementById('messageInput').focus();
+        }
+    }
+
+    // deleteSession 调用后端删除会话。
+    async function deleteSession(sessionId) {
+        // 用户取消确认时直接返回。
+        if (!window.confirm('确定删除这个会话吗？该会话的聊天记忆也会一起删除。')) return;
+        // 设置等待状态。
+        setBusy(true);
+        // 尝试调用后端删除接口。
+        try {
+            // 调用删除会话 API。
+            await apiJson(`/xiaozhi/conversations/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
+            // 删除本地消息缓存。
+            removeMessageCache(sessionId);
+            // 从内存会话列表移除。
+            sessions = sessions.filter(session => session.id !== sessionId);
+            // 如果删的是当前会话，就切换到第一条剩余会话。
+            if (currentSessionId === sessionId) {
+                // 如果还有剩余会话，就切换过去。
+                if (sessions.length > 0) {
+                    // 切换到第一条会话。
+                    await switchSession(sessions[0].id);
+                } else {
+                    // 没有会话时自动创建一个新会话。
+                    await createNewSession(false, true);
+                }
+            } else {
+                // 不是当前会话时只刷新列表。
+                renderSessionList();
+            }
+            // 展示成功提示。
+            showToast('会话已删除');
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('删除会话失败:', error);
+            // 给用户展示失败提示。
+            showToast('删除会话失败，请稍后重试');
+        } finally {
+            // 恢复非等待状态。
+            setBusy(false);
+            // 聚焦输入框。
+            document.getElementById('messageInput').focus();
+        }
+    }
+
+    // clearCurrentConversation 清空当前会话聊天历史，但保留会话窗口。
+    async function clearCurrentConversation() {
+        // 没有当前会话时直接提示。
+        if (!currentSessionId) {
+            // 展示提示。
+            showToast('当前没有可清空的会话');
+            // 结束流程。
+            return;
+        }
+        // 让用户二次确认，避免误删聊天历史。
+        if (!window.confirm('清空后聊天历史将丢失，是否确定清空？')) return;
+        // 设置等待状态。
+        setBusy(true);
+        // 尝试调用后端清空接口。
+        try {
+            // 清空后端当前会话消息。
+            await apiJson(`/xiaozhi/conversations/${encodeURIComponent(currentSessionId)}/messages`, { method: 'DELETE' });
+            // 用欢迎语替换当前浏览器里的临时消息缓存。
+            replaceMessages(currentSessionId, [{ role: 'assistant', content: WELCOME_MESSAGE, timestamp: Date.now() }]);
+            // 展示成功提示。
+            showToast('当前对话已清空');
+        } catch (error) {
+            // 打印错误便于排查。
+            console.error('清空对话失败:', error);
+            // 展示失败提示。
+            showToast('清空对话失败，请稍后重试');
+        } finally {
+            // 恢复非等待状态。
+            setBusy(false);
+            // 聚焦输入框。
+            document.getElementById('messageInput').focus();
+        }
+    }
+
+    // isoDateString 把 Date 对象转换成 YYYY-MM-DD。
+    function isoDateString(date) {
+        // 返回 ISO 字符串的日期部分。
+        return date.toISOString().slice(0, 10);
+    }
+
+    // uniqueValues 提取数组中的唯一非空值。
+    function uniqueValues(values) {
+        // 用 Set 去重后再转回数组。
+        return [...new Set(values.filter(value => value))];
+    }
+
+    // formatChineseDate 把 YYYY-MM-DD 转成中文日期。
+    function formatChineseDate(value) {
+        // 空值直接返回空字符串。
+        if (!value) return '';
+        // 按短横线拆分年月日。
+        const parts = String(value).split('-');
+        // 格式不符合预期时返回原值。
+        if (parts.length !== 3) return value;
+        // 返回纯中文日期展示。
+        return `${parts[0]}年${parts[1]}月${parts[2]}日`;
+    }
+
+    // scheduleMatchesCurrentForm 判断一个号源是否符合当前表单过滤条件。
+    function scheduleMatchesCurrentForm(option) {
+        // 读取当前科室。
+        const department = document.getElementById('appointmentDepartment').value;
+        // 读取当前日期。
+        const date = document.getElementById('appointmentDate').value;
+        // 读取当前时间段。
+        const timeSlot = document.getElementById('appointmentTimeSlot').value;
+        // 科室已选择但不匹配时返回 false。
+        if (department && option.department !== department) return false;
+        // 日期已选择但不匹配时返回 false。
+        if (date && option.date !== date) return false;
+        // 时间段已选择但不匹配时返回 false。
+        if (timeSlot && option.timeSlot !== timeSlot) return false;
+        // 所有已选条件都匹配时返回 true。
+        return true;
+    }
+
+    // renderDepartmentOptions 渲染科室下拉选项。
+    function renderDepartmentOptions() {
+        // 读取科室下拉框。
+        const departmentSelect = document.getElementById('appointmentDepartment');
+        // 保存当前选中的科室。
+        const selected = departmentSelect.value;
+        // 从所有号源中提取科室列表。
+        const departments = uniqueValues(appointmentScheduleOptions.map(option => option.department));
+        // 没有科室时展示明确空状态。
+        if (departments.length === 0) {
+            // 写入空状态选项。
+            departmentSelect.innerHTML = '<option value="">暂无可预约科室</option>';
+            // 禁用科室下拉。
+            departmentSelect.disabled = true;
+            // 结束渲染。
+            return;
+        }
+        // 有科室时启用下拉。
+        departmentSelect.disabled = false;
+        // 拼接科室选项。
+        departmentSelect.innerHTML = '<option value="">请选择科室</option>' + departments.map(department => `<option value="${escapeHtml(department)}">${escapeHtml(department)}</option>`).join('');
+        // 如果原选中科室仍存在，就恢复选中。
+        if (departments.includes(selected)) departmentSelect.value = selected;
+    }
+
+    // availableAppointmentDates 返回当前已加载号源中的可预约日期集合。
+    function availableAppointmentDates() {
+        // 读取当前科室。
+        const department = document.getElementById('appointmentDepartment').value;
+        // 按当前科室过滤号源，但不按时间段过滤，避免“只有下午号”被上午选择误伤。
+        const options = appointmentScheduleOptions.filter(option => {
+            // 科室已选择但不匹配时排除。
+            if (department && option.department !== department) return false;
+            // 当前号源符合日期候选条件。
+            return true;
+        });
+        // 返回去重后的日期 Set，方便日历快速判断某天是否可选。
+        return new Set(uniqueValues(options.map(option => option.date)));
+    }
+
+    // availableAppointmentTimeSlots 返回当前科室和日期下可选择的时间段。
+    function availableAppointmentTimeSlots() {
+        // 读取当前科室。
+        const department = document.getElementById('appointmentDepartment').value;
+        // 读取当前日期。
+        const date = document.getElementById('appointmentDate').value;
+        // 按科室和日期过滤号源，不按时间段过滤。
+        const options = appointmentScheduleOptions.filter(option => {
+            // 科室已选择但不匹配时排除。
+            if (department && option.department !== department) return false;
+            // 日期已选择但不匹配时排除。
+            if (date && option.date !== date) return false;
+            // 当前号源符合时间段候选条件。
+            return true;
+        });
+        // 定义时间段排序权重，保证上午在下午前面。
+        const order = { '上午': 1, '下午': 2 };
+        // 返回去重且排序后的时间段。
+        return uniqueValues(options.map(option => option.timeSlot)).sort((a, b) => (order[a] || 99) - (order[b] || 99));
+    }
+
+    // renderTimeSlotOptions 根据当前科室和日期渲染预约时间下拉。
+    function renderTimeSlotOptions() {
+        // 读取时间段下拉框。
+        const timeSlotSelect = document.getElementById('appointmentTimeSlot');
+        // 保存当前已选时间段。
+        const selected = timeSlotSelect.value;
+        // 读取当前日期。
+        const selectedDate = document.getElementById('appointmentDate').value;
+        // 计算当前条件下可选时间段。
+        const timeSlots = availableAppointmentTimeSlots();
+        // 没有可选时间段时展示空状态。
+        if (timeSlots.length === 0) {
+            // 写入空状态选项。
+            timeSlotSelect.innerHTML = '<option value="">暂无可预约时间</option>';
+            // 禁用时间段下拉。
+            timeSlotSelect.disabled = true;
+            // 结束渲染。
+            return;
+        }
+        // 有可选时间段时启用下拉。
+        timeSlotSelect.disabled = false;
+        // 写入占位项和真实时间段。
+        timeSlotSelect.innerHTML = '<option value="">请选择时间</option>' + timeSlots.map(timeSlot => `<option value="${escapeHtml(timeSlot)}">${escapeHtml(timeSlot)}</option>`).join('');
+        // 如果原时间段仍然可用，就保持选中。
+        if (timeSlots.includes(selected)) {
+            // 恢复原时间段。
+            timeSlotSelect.value = selected;
+            // 结束渲染。
+            return;
+        }
+        // 如果已经选了日期且当天只有一个时间段，就自动选中它。
+        if (selectedDate && timeSlots.length === 1) {
+            // 自动选中唯一可约时间段。
+            timeSlotSelect.value = timeSlots[0];
+            // 结束渲染。
+            return;
+        }
+        // 其他情况保持占位项，让用户主动选择上午或下午。
+        timeSlotSelect.value = '';
+    }
+
+    // refreshAppointmentScheduleFilters 刷新日期日历和医生选项。
+    function refreshAppointmentScheduleFilters() {
+        // 读取当前已选日期。
+        const selectedDate = document.getElementById('appointmentDate').value;
+        // 读取当前条件下仍然可选的日期。
+        const dates = availableAppointmentDates();
+        // 如果当前日期在新筛选条件下不可用，就清空日期。
+        if (selectedDate && !dates.has(selectedDate)) {
+            // 清空已选日期。
+            setAppointmentDate('');
+        }
+        // 重新渲染日历。
+        renderDateOptions();
+        // 重新渲染时间段。
+        renderTimeSlotOptions();
+        // 重新渲染医生选项。
+        renderDoctorOptions();
+    }
+
+    // setAppointmentDate 设置当前预约日期。
+    function setAppointmentDate(value) {
+        // 读取隐藏日期字段。
+        const dateInput = document.getElementById('appointmentDate');
+        // 读取日期展示按钮。
+        const dateDisplay = document.getElementById('appointmentDateDisplay');
+        // 保存提交给后端的 YYYY-MM-DD 日期。
+        dateInput.value = value || '';
+        // 展示中文日期或占位文案。
+        dateDisplay.textContent = value ? formatChineseDate(value) : '请选择日期';
+        // 如果用户已经选择日期，就清除日期错误提示。
+        if (value) {
+            // 清除日期校验错误。
+            setAppointmentDateError('');
+        }
+        // 选择日期后刷新可选时间段。
+        renderTimeSlotOptions();
+        // 选择日期后刷新医生选项。
+        renderDoctorOptions();
+    }
+
+    // setAppointmentDateError 设置预约日期控件的错误提示。
+    function setAppointmentDateError(message) {
+        // 读取日期展示按钮。
+        const dateDisplay = document.getElementById('appointmentDateDisplay');
+        // 读取错误提示节点。
+        const error = document.getElementById('appointmentDateError');
+        // 写入错误文案。
+        error.textContent = message || '';
+        // 有错误时给按钮加红框。
+        dateDisplay.classList.toggle('invalid', Boolean(message));
+    }
+
+    // validateAppointmentDate 校验自定义日期控件是否已选择日期。
+    function validateAppointmentDate() {
+        // 读取隐藏日期字段。
+        const date = document.getElementById('appointmentDate').value;
+        // 如果日期已选择，校验通过。
+        if (date) {
+            // 清除历史错误。
+            setAppointmentDateError('');
+            // 返回 true 表示通过。
+            return true;
+        }
+        // 设置明确错误提示。
+        setAppointmentDateError('请选择预约日期。');
+        // 把焦点移到日期按钮，方便用户立刻打开日历。
+        document.getElementById('appointmentDateDisplay').focus();
+        // 返回 false 表示校验失败。
+        return false;
+    }
+
+    // syncAppointmentCalendarFromSelectedDate 根据已选日期同步日历年月。
+    function syncAppointmentCalendarFromSelectedDate() {
+        // 读取当前隐藏日期值。
+        const selected = document.getElementById('appointmentDate').value;
+        // 没有选中日期时不改变当前年月。
+        if (!selected) return;
+        // 拆分日期。
+        const parts = selected.split('-');
+        // 日期格式不正确时不处理。
+        if (parts.length !== 3) return;
+        // 同步日历年份。
+        appointmentCalendarYear = Number(parts[0]);
+        // 同步日历月份，前端 Date 月份从 0 开始。
+        appointmentCalendarMonth = Number(parts[1]) - 1;
+    }
+
+    // renderDateOptions 渲染预约日历控件。
+    function renderDateOptions() {
+        // 同步已选日期对应的年月。
+        syncAppointmentCalendarFromSelectedDate();
+        // 渲染日历面板。
+        renderAppointmentCalendar();
+    }
+
+    // renderAppointmentCalendar 渲染可选年、月、日的日历面板。
+    function renderAppointmentCalendar() {
+        // 读取年选择框。
+        const yearSelect = document.getElementById('appointmentYearSelect');
+        // 读取月选择框。
+        const monthSelect = document.getElementById('appointmentMonthSelect');
+        // 读取日期格子容器。
+        const daysContainer = document.getElementById('appointmentCalendarDays');
+        // 读取所有可预约日期。
+        const availableDates = availableAppointmentDates();
+        // 读取当前已选日期。
+        const selectedDate = document.getElementById('appointmentDate').value;
+        // 提取所有有号源的年份。
+        const years = uniqueValues(appointmentScheduleOptions.map(option => String(option.date).slice(0, 4))).sort();
+        // 没有号源年份时使用当前年份兜底。
+        const finalYears = years.length > 0 ? years : [String(new Date().getFullYear())];
+        // 如果当前展示年份不在号源年份里，就切到第一个号源年份。
+        if (!finalYears.includes(String(appointmentCalendarYear))) {
+            // 更新当前展示年份。
+            appointmentCalendarYear = Number(finalYears[0]);
+        }
+        // 渲染年份选项。
+        yearSelect.innerHTML = finalYears.map(year => `<option value="${escapeHtml(year)}">${escapeHtml(year)}年</option>`).join('');
+        // 设置当前年份选中。
+        yearSelect.value = String(appointmentCalendarYear);
+        // 渲染 12 个月份选项。
+        monthSelect.innerHTML = Array.from({ length: 12 }, (_, index) => `<option value="${index}">${index + 1}月</option>`).join('');
+        // 设置当前月份选中。
+        monthSelect.value = String(appointmentCalendarMonth);
+        // 计算当月第一天。
+        const firstDay = new Date(appointmentCalendarYear, appointmentCalendarMonth, 1);
+        // 计算当月天数。
+        const daysInMonth = new Date(appointmentCalendarYear, appointmentCalendarMonth + 1, 0).getDate();
+        // 计算第一天是星期几。
+        const startWeekday = firstDay.getDay();
+        // 创建日期格子 HTML 数组。
+        const cells = [];
+        // 补齐月初前面的空白格。
+        for (let i = 0; i < startWeekday; i++) {
+            // 添加禁用空白按钮。
+            cells.push('<button class="date-picker-day" type="button" disabled></button>');
+        }
+        // 渲染当月每一天。
+        for (let day = 1; day <= daysInMonth; day++) {
+            // 拼出 YYYY-MM-DD。
+            const value = `${appointmentCalendarYear}-${String(appointmentCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            // 判断当前日期是否有号源。
+            const enabled = availableDates.has(value);
+            // 判断当前日期是否已选中。
+            const selected = value === selectedDate;
+            // 拼接日期按钮。
+            cells.push(`<button class="date-picker-day ${selected ? 'selected' : ''}" type="button" data-date="${value}" ${enabled ? '' : 'disabled'}>${day}</button>`);
+        }
+        // 写入日期格子。
+        daysContainer.innerHTML = cells.join('');
+        // 给可选日期绑定点击事件。
+        daysContainer.querySelectorAll('.date-picker-day[data-date]').forEach(button => {
+            // 点击日期时设置预约日期。
+            button.addEventListener('click', () => {
+                // 保存选择的日期。
+                setAppointmentDate(button.dataset.date);
+                // 关闭日历面板。
+                closeAppointmentCalendar();
+                // 重新渲染日历，刷新选中样式。
+                renderAppointmentCalendar();
+            });
+        });
+    }
+
+    // renderDoctorOptions 根据当前科室、日期、时间段渲染医生下拉。
+    function renderDoctorOptions() {
+        // 读取医生下拉框。
+        const doctorSelect = document.getElementById('appointmentDoctorName');
+        // 读取提示文案节点。
+        const hint = document.getElementById('appointmentScheduleHint');
+        // 找到符合当前表单条件的可预约号源。
+        const matches = appointmentScheduleOptions.filter(scheduleMatchesCurrentForm);
+        // 没有号源时展示空状态。
+        if (matches.length === 0) {
+            // 写入医生空选项。
+            doctorSelect.innerHTML = '<option value="">当前条件暂无号源</option>';
+            // 禁用医生下拉。
+            doctorSelect.disabled = true;
+            // 更新提示文案。
+            hint.textContent = appointmentSchedulesLoaded ? '当前筛选条件下暂无可预约号源，请调整科室、日期或时间段。' : '正在准备可预约号源...';
+            // 结束渲染。
+            return;
+        }
+        // 启用医生下拉。
+        doctorSelect.disabled = false;
+        // 拼接医生选项。
+        doctorSelect.innerHTML = '<option value="">请选择医生</option>' + matches.map(option => {
+            // 构造展示文案。
+            const label = `${option.doctorName}（${option.title || '医生'}，余号 ${option.remainingSlots}）`;
+            // 返回 option HTML。
+            return `<option value="${escapeHtml(option.doctorName)}">${escapeHtml(label)}</option>`;
+        }).join('');
+        // 更新提示文案。
+        hint.textContent = `已加载 ${appointmentScheduleOptions.length} 个可预约号源，当前条件匹配 ${matches.length} 个。`;
+    }
+
+    // loadAppointmentSchedules 从后端加载未来可预约排班。
+    async function loadAppointmentSchedules(force = false) {
+        // 已加载过且不强制刷新时直接渲染。
+        if (appointmentSchedulesLoaded && !force) {
+            // 渲染科室选项。
+            renderDepartmentOptions();
+            // 渲染日期选项。
+            renderDateOptions();
+            // 渲染时间段选项。
+            renderTimeSlotOptions();
+            // 渲染医生选项。
+            renderDoctorOptions();
+            // 结束流程。
+            return;
+        }
+        // 读取今天日期。
+        const today = new Date();
+        // 读取未来 30 天日期。
+        const endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+        // 更新提示文案。
+        document.getElementById('appointmentScheduleHint').textContent = '正在加载可预约号源...';
+        // 加载期间禁用号源相关控件。
+        document.getElementById('appointmentDepartment').disabled = true;
+        document.getElementById('appointmentDateDisplay').disabled = true;
+        document.getElementById('appointmentTimeSlot').disabled = true;
+        document.getElementById('appointmentDoctorName').disabled = true;
+        // 查询后端真实排班。
+        const data = await apiJson(`/xiaozhi/appointments/schedules?startDate=${encodeURIComponent(isoDateString(today))}&endDate=${encodeURIComponent(isoDateString(endDate))}`);
+        // 保存号源选项。
+        appointmentScheduleOptions = data || [];
+        // 标记已加载。
+        appointmentSchedulesLoaded = true;
+        // 有号源时允许打开日期控件。
+        document.getElementById('appointmentDateDisplay').disabled = appointmentScheduleOptions.length === 0;
+        // 渲染科室选项。
+        renderDepartmentOptions();
+        // 渲染日期选项。
+        renderDateOptions();
+        // 渲染时间段选项。
+        renderTimeSlotOptions();
+        // 渲染医生选项。
+        renderDoctorOptions();
+        // 没有任何号源时给出明确空状态。
+        if (appointmentScheduleOptions.length === 0) {
+            // 更新提示文案。
+            document.getElementById('appointmentScheduleHint').textContent = '未来 30 天暂无可预约号源，请稍后再试或调整后台排班。';
+        }
+    }
+
+    // openAppointmentForm 打开结构化预约表单。
+    async function openAppointmentForm() {
+        // 读取预约弹窗节点。
+        const modal = document.getElementById('appointmentModal');
+        // 给弹窗添加 open 状态。
+        modal.classList.add('open');
+        // 关闭可能残留的日期日历。
+        closeAppointmentCalendar();
+        // 尝试加载真实可预约排班。
+        try {
+            // 加载号源选项。
+            await loadAppointmentSchedules(false);
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('加载预约号源失败:', error);
+            // 清空旧号源，避免用户误提交过期选项。
+            appointmentScheduleOptions = [];
+            // 标记未成功加载。
+            appointmentSchedulesLoaded = false;
+            // 禁用日期控件。
+            document.getElementById('appointmentDateDisplay').disabled = true;
+            // 刷新下拉空状态。
+            renderDepartmentOptions();
+            renderDateOptions();
+            renderTimeSlotOptions();
+            renderDoctorOptions();
+            // 更新提示文案。
+            document.getElementById('appointmentScheduleHint').textContent = '号源加载失败，请确认后端服务和 MySQL 配置正常后重试。';
+            // 展示失败提示。
+            showToast('预约号源加载失败');
+        }
+        // 聚焦患者姓名输入框。
+        document.getElementById('appointmentUsername').focus();
+    }
+
+    // closeAppointmentForm 关闭结构化预约表单。
+    function closeAppointmentForm() {
+        // 读取预约弹窗节点。
+        const modal = document.getElementById('appointmentModal');
+        // 移除 open 状态。
+        modal.classList.remove('open');
+    }
+
+    // selectedAppointmentSchedule 查找当前表单对应的真实号源。
+    function selectedAppointmentSchedule() {
+        // 读取当前医生姓名。
+        const doctorName = document.getElementById('appointmentDoctorName').value;
+        // 在已加载号源中查找完全匹配项。
+        return appointmentScheduleOptions.find(option => scheduleMatchesCurrentForm(option) && option.doctorName === doctorName);
+    }
+
+    // openAppointmentCalendar 打开预约日期日历。
+    function openAppointmentCalendar() {
+        // 读取日历面板。
+        const picker = document.getElementById('appointmentDatePicker');
+        // 读取日期展示按钮。
+        const trigger = document.getElementById('appointmentDateDisplay');
+        // 打开日历面板。
+        picker.classList.add('open');
+        // 更新无障碍展开状态。
+        trigger.setAttribute('aria-expanded', 'true');
+        // 渲染当前日历。
+        renderAppointmentCalendar();
+    }
+
+    // closeAppointmentCalendar 关闭预约日期日历。
+    function closeAppointmentCalendar() {
+        // 读取日历面板。
+        const picker = document.getElementById('appointmentDatePicker');
+        // 读取日期展示按钮。
+        const trigger = document.getElementById('appointmentDateDisplay');
+        // 关闭日历面板。
+        picker.classList.remove('open');
+        // 更新无障碍展开状态。
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    // toggleAppointmentCalendar 切换预约日期日历显示状态。
+    function toggleAppointmentCalendar() {
+        // 读取日历面板。
+        const picker = document.getElementById('appointmentDatePicker');
+        // 根据当前状态打开或关闭。
+        if (picker.classList.contains('open')) {
+            // 当前已打开时关闭。
+            closeAppointmentCalendar();
+        } else {
+            // 当前未打开时打开。
+            openAppointmentCalendar();
+        }
+    }
+
+    // appointmentFormPayload 从表单中收集预约请求体。
+    function appointmentFormPayload() {
+        // 读取预约表单。
+        const form = document.getElementById('appointmentForm');
+        // 从表单创建 FormData。
+        const formData = new FormData(form);
+        // 返回后端 AppointmentBookingRequest 需要的 JSON 字段。
+        return {
+            // 患者姓名。
+            username: String(formData.get('username') || '').trim(),
+            // 患者身份证号。
+            idCard: String(formData.get('idCard') || '').trim(),
+            // 患者手机号。
+            phone: String(formData.get('phone') || '').trim(),
+            // 预约科室。
+            department: String(formData.get('department') || '').trim(),
+            // 预约医生姓名。
+            doctorName: String(formData.get('doctorName') || '').trim(),
+            // 预约日期，格式为 YYYY-MM-DD。
+            date: String(formData.get('date') || '').trim(),
+            // 预约时间段，目前是上午或下午。
+            timeSlot: String(formData.get('timeSlot') || '').trim()
+        };
+    }
+
+    // appointmentResultMessage 把预约响应转换成聊天区可读消息。
+    function appointmentResultMessage(payload) {
+        // 读取响应 data，失败时 data 也可能存在。
+        const data = payload.data || {};
+        // 如果预约成功，就返回成功摘要。
+        if (payload.code === 0 && data.success) {
+            // 拼接成功文案。
+            return `预约提交成功。\n\n预约ID：${data.appointmentId || '-'}\n患者：${data.username || '-'}\n身份证：${data.maskedIdCard || '-'}\n手机号：${data.maskedPhone || '-'}\n科室：${data.department || '-'}\n医生：${data.doctorName || '-'}\n日期：${data.date || '-'}\n时间：${data.timeSlot || '-'}\n\n请按医院规则提前到院或留意后续通知。`;
+        }
+        // 返回失败文案。
+        return `预约提交失败。\n\n原因：${payload.message || data.message || '预约信息未通过校验。'}\n\n请检查表单信息后重新提交。`;
+    }
+
+    // submitAppointmentForm 提交结构化预约表单。
+    async function submitAppointmentForm(event) {
+        // 阻止浏览器默认表单提交刷新页面。
+        event.preventDefault();
+        // 正在提交时不重复提交。
+        if (isSubmittingAppointment) return;
+        // 读取表单。
+        const form = document.getElementById('appointmentForm');
+        // 浏览器原生校验不通过时直接返回。
+        if (!form.reportValidity()) return;
+        // 自定义日期控件不是普通输入框，必须额外校验。
+        if (!validateAppointmentDate()) {
+            // 展示轻量提示。
+            showToast('请选择预约日期');
+            // 结束提交流程，不创建会话、不调用后端。
+            return;
+        }
+        // 查找当前表单选择的真实号源。
+        const selectedSchedule = selectedAppointmentSchedule();
+        // 没有匹配真实号源时拒绝提交。
+        if (!selectedSchedule) {
+            // 展示用户提示。
+            showToast('请选择当前可预约号源');
+            // 结束提交流程。
+            return;
+        }
+        // 如果当前还没有会话，就先创建一个会话用来展示预约结果。
+        if (!currentSessionId) await createNewSession(false, true);
+        // 如果创建会话失败，就停止提交。
+        if (!currentSessionId) return;
+        // 标记正在提交。
+        isSubmittingAppointment = true;
+        // 禁用提交按钮并展示忙碌文案。
+        setButtonBusy('submitAppointmentBtn', true, '提交中');
+        // 尝试提交后端预约接口。
+        try {
+            // 收集表单请求体。
+            const request = appointmentFormPayload();
+            // 调用预约接口，并保留失败响应 data。
+            const payload = await apiPayload('/xiaozhi/appointments', {
+                // 使用 POST 方法。
+                method: 'POST',
+                // 请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 写入预约请求体。
+                body: JSON.stringify(request)
+            });
+            // 关闭预约弹窗。
+            closeAppointmentForm();
+            // 把提交结果写入聊天区，便于演示流程闭环。
+            addAssistantMessageAndSave(appointmentResultMessage(payload));
+            // 成功时重置表单。
+            if (payload.code === 0) {
+                // 重置原生表单字段。
+                form.reset();
+                // 重置自定义日期控件。
+                setAppointmentDate('');
+            }
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('提交预约失败:', error);
+            // 把网络或系统错误写入聊天区。
+            addAssistantMessageAndSave('预约提交失败。\n\n系统暂时不可用，请稍后再试。');
+        } finally {
+            // 标记提交结束。
+            isSubmittingAppointment = false;
+            // 恢复提交按钮。
+            setButtonBusy('submitAppointmentBtn', false, '提交中');
+        }
+    }
+
+    // openMyAppointmentsModal 打开我的预约弹窗。
+    function openMyAppointmentsModal() {
+        // 读取弹窗节点。
+        const modal = document.getElementById('myAppointmentsModal');
+        // 打开弹窗。
+        modal.classList.add('open');
+        // 聚焦患者姓名输入框。
+        document.getElementById('searchAppointmentUsername').focus();
+    }
+
+    // closeMyAppointmentsModal 关闭我的预约弹窗。
+    function closeMyAppointmentsModal() {
+        // 读取弹窗节点。
+        const modal = document.getElementById('myAppointmentsModal');
+        // 关闭弹窗。
+        modal.classList.remove('open');
+    }
+
+    // appointmentSearchPayload 从查询表单中收集请求体。
+    function appointmentSearchPayload() {
+        // 读取查询表单。
+        const form = document.getElementById('appointmentSearchForm');
+        // 创建表单数据对象。
+        const formData = new FormData(form);
+        // 返回后端查询接口需要的 JSON。
+        return {
+            // 患者姓名。
+            username: String(formData.get('username') || '').trim(),
+            // 身份证号。
+            idCard: String(formData.get('idCard') || '').trim()
+        };
+    }
+
+    // renderAppointmentSearchResult 渲染我的预约查询结果。
+    function renderAppointmentSearchResult(appointments) {
+        // 读取结果容器。
+        const container = document.getElementById('appointmentSearchResult');
+        // 没有预约时展示空状态。
+        if (!appointments || appointments.length === 0) {
+            // 设置空状态样式。
+            container.className = 'result-panel empty';
+            // 写入空状态。
+            container.textContent = '当前没有查询到有效预约。';
+            // 结束渲染。
+            return;
+        }
+        // 设置结果样式。
+        container.className = 'result-panel';
+        // 拼接预约卡片。
+        container.innerHTML = appointments.map(item => `
+            <div class="appointment-card" data-appointment-id="${item.appointmentId}">
+                <div class="appointment-card-title">${escapeHtml(item.department || '-')} · ${escapeHtml(item.doctorName || '-')}</div>
+                <div class="appointment-card-meta">
+                    预约ID：${escapeHtml(String(item.appointmentId || '-'))}<br>
+                    患者：${escapeHtml(item.username || '-')}，身份证：${escapeHtml(item.maskedIdCard || '-')}，手机号：${escapeHtml(item.maskedPhone || '-')}<br>
+                    时间：${escapeHtml(formatChineseDate(item.date) || '-')} ${escapeHtml(item.timeSlot || '-')}
+                </div>
+                <button class="danger-btn cancel-appointment-btn" type="button" data-appointment-id="${item.appointmentId}">取消预约</button>
+            </div>
+        `).join('');
+        // 给每个取消按钮绑定事件。
+        container.querySelectorAll('.cancel-appointment-btn').forEach(button => {
+            // 监听取消按钮点击。
+            button.addEventListener('click', () => cancelSearchedAppointment(button.dataset.appointmentId));
+        });
+    }
+
+    // searchAppointments 查询本人有效预约。
+    async function searchAppointments(event) {
+        // 阻止表单默认刷新。
+        event.preventDefault();
+        // 读取查询表单。
+        const form = document.getElementById('appointmentSearchForm');
+        // 浏览器原生校验不通过时直接返回。
+        if (!form.reportValidity()) return;
+        // 读取查询按钮。
+        const button = document.getElementById('searchAppointmentBtn');
+        // 禁用按钮防止重复提交。
+        button.disabled = true;
+        // 读取结果容器。
+        const result = document.getElementById('appointmentSearchResult');
+        // 展示加载状态。
+        renderPanelState(result, 'loading', '正在查询预约', '请稍候，系统正在核对患者姓名和身份证号。');
+        // 切换按钮忙碌文案。
+        setButtonBusy(button, true, '查询中');
+        // 尝试调用查询接口。
+        try {
+            // 收集请求体。
+            const request = appointmentSearchPayload();
+            // 保存本次身份证号，取消时复用。
+            latestAppointmentSearchIdCard = request.idCard;
+            // 调用后端查询接口。
+            const appointments = await apiJson('/xiaozhi/appointments/search', {
+                // 使用 POST 方法。
+                method: 'POST',
+                // 请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 写入查询请求。
+                body: JSON.stringify(request)
+            });
+            // 渲染查询结果。
+            renderAppointmentSearchResult(appointments);
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('查询预约失败:', error);
+            // 展示失败样式。
+            renderPanelState(result, 'error', '查询预约失败', '请确认姓名、身份证号和后端服务状态后重试。');
+        } finally {
+            // 恢复按钮。
+            setButtonBusy(button, false, '查询中');
+        }
+    }
+
+    // cancelSearchedAppointment 取消查询结果中的某条预约。
+    async function cancelSearchedAppointment(appointmentId) {
+        // 没有预约 ID 时直接提示。
+        if (!appointmentId) {
+            // 展示提示。
+            showToast('缺少预约ID');
+            // 结束流程。
+            return;
+        }
+        // 取消预约需要二次确认。
+        if (!window.confirm(`确定取消预约 ${appointmentId} 吗？`)) return;
+        // 找到当前按钮。
+        const button = document.querySelector(`.cancel-appointment-btn[data-appointment-id="${appointmentId}"]`);
+        // 禁用按钮。
+        if (button) setButtonBusy(button, true, '取消中');
+        // 尝试调用取消接口。
+        try {
+            // 调用后端取消预约接口。
+            const payload = await apiPayload(`/xiaozhi/appointments/${encodeURIComponent(appointmentId)}/cancel`, {
+                // 使用 POST 方法。
+                method: 'POST',
+                // 请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 写入身份证号用于身份校验。
+                body: JSON.stringify({ idCard: latestAppointmentSearchIdCard })
+            });
+            // 如果取消失败，就提示后端返回原因。
+            if (payload.code !== 0 || !payload.data || !payload.data.success) {
+                // 展示失败提示。
+                showToast(payload.message || '取消预约失败');
+                // 恢复按钮。
+                if (button) setButtonBusy(button, false, '取消中');
+                // 结束流程。
+                return;
+            }
+            // 展示成功提示。
+            showToast('预约已取消');
+            // 重新查询列表，保证页面状态和数据库一致。
+            await searchAppointments(new Event('submit'));
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('取消预约失败:', error);
+            // 展示失败提示。
+            showToast('取消预约失败，请稍后重试');
+            // 恢复按钮。
+            if (button) setButtonBusy(button, false, '取消中');
+        }
+    }
+
+    // openRagModal 打开 RAG 工具弹窗。
+    function openRagModal() {
+        // 读取弹窗节点。
+        const modal = document.getElementById('ragModal');
+        // 打开弹窗。
+        modal.classList.add('open');
+        // 聚焦问题输入框。
+        document.getElementById('ragQuery').focus();
+    }
+
+    // closeRagModal 关闭 RAG 工具弹窗。
+    function closeRagModal() {
+        // 读取弹窗节点。
+        const modal = document.getElementById('ragModal');
+        // 关闭弹窗。
+        modal.classList.remove('open');
+    }
+
+    // ragSearchRequest 从 RAG 表单组装检索请求。
+    function ragSearchRequest() {
+        // 读取问题。
+        const query = document.getElementById('ragQuery').value.trim();
+        // 读取检索模式。
+        const retrievalMode = document.getElementById('ragRetrievalMode').value;
+        // 读取 topK。
+        const topK = Number(document.getElementById('ragTopK').value || 5);
+        // 返回后端检索请求。
+        return { query, retrievalMode, topK, language: 'Chinese' };
+    }
+
+    // renderCitations 渲染 RAG 引用列表。
+    function renderCitations(citations) {
+        // 没有引用时返回空态。
+        if (!citations || citations.length === 0) return '<div class="result-panel empty">本次回答没有返回引用来源。</div>';
+        // 拼接引用列表。
+        return `<div class="citation-list">${citations.map(citation => {
+            // 读取 URL。
+            const url = citation.sourceUrl || '';
+            // 构造标题。
+            const title = `[${citation.citationNumber}] ${citation.title || '未命名来源'}`;
+            // 返回单条引用。
+            return `<div class="citation-item"><strong>${escapeHtml(title)}</strong><br>${escapeHtml(citation.sourceName || '-')} · ${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">查看来源</a>` : '无链接'}<br><span>${escapeHtml(citation.chunkId || '')}</span></div>`;
+        }).join('')}</div>`;
+    }
+
+    // submitRagAnswer 生成 RAG 回答。
+    async function submitRagAnswer(event) {
+        // 阻止表单默认刷新。
+        event.preventDefault();
+        // 读取结果容器。
+        const result = document.getElementById('ragResult');
+        // 读取提交按钮。
+        const button = document.getElementById('ragAnswerBtn');
+        // 没有问题时提示。
+        if (!document.getElementById('ragQuery').value.trim()) {
+            // 展示提示。
+            showToast('请输入医学问题');
+            // 结束流程。
+            return;
+        }
+        // 禁用按钮并展示忙碌文案。
+        setButtonBusy(button, true, '生成中');
+        // 展示加载状态。
+        renderPanelState(result, 'loading', '正在生成 RAG 回答', '正在检索知识片段并组织带引用的回答。');
+        // 尝试调用 RAG answer 接口。
+        try {
+            // 调用后端 RAG 回答接口。
+            const data = await apiJson('/xiaozhi/rag/answer', {
+                // 使用 POST 方法。
+                method: 'POST',
+                // 请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 写入回答请求。
+                body: JSON.stringify({ searchRequest: ragSearchRequest(), includePrompt: false })
+            });
+            // 设置结果样式。
+            result.className = 'result-panel';
+            // 渲染回答、检索模式和引用。
+            result.innerHTML = `<strong>回答</strong><br>${formatMessageWithThinking(data.answer || '')}<br><br><strong>检索模式</strong><br>${escapeHtml(data.retrievalMode || '-')}<br><br><strong>引用来源</strong>${renderCitations(data.citations)}`;
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('RAG回答失败:', error);
+            // 展示失败样式。
+            renderPanelState(result, 'error', 'RAG 回答生成失败', '请确认后端服务、RAG 配置和知识库索引状态正常。');
+        } finally {
+            // 恢复按钮。
+            setButtonBusy(button, false, '生成中');
+        }
+    }
+
+    // previewRagContext 预览 RAG 检索上下文。
+    async function previewRagContext() {
+        // 读取结果容器。
+        const result = document.getElementById('ragResult');
+        // 读取按钮。
+        const button = document.getElementById('ragContextBtn');
+        // 禁用按钮并展示忙碌文案。
+        setButtonBusy(button, true, '检索中');
+        // 展示加载状态。
+        renderPanelState(result, 'loading', '正在检索上下文', '正在返回命中片段、引用和拼接后的 context。');
+        // 尝试调用 context 接口。
+        try {
+            // 调用后端上下文预览接口。
+            const data = await apiJson('/xiaozhi/rag/context', {
+                // 使用 POST 方法。
+                method: 'POST',
+                // 请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 写入检索请求。
+                body: JSON.stringify(ragSearchRequest())
+            });
+            // 设置结果样式。
+            result.className = 'result-panel';
+            // 渲染上下文调试信息。
+            result.innerHTML = `<strong>命中片段</strong><br>共 ${data.hits ? data.hits.length : 0} 条，模式 ${escapeHtml(data.retrievalMode || '-')}。${renderCitations(data.citations)}<div class="debug-block">${escapeHtml(data.contextText || '')}</div>`;
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('RAG上下文预览失败:', error);
+            // 展示失败样式。
+            renderPanelState(result, 'error', 'RAG 上下文预览失败', '请稍后重试，或检查后端 RAG context 接口。');
+        } finally {
+            // 恢复按钮。
+            setButtonBusy(button, false, '检索中');
+        }
+    }
+
+    // loadRagEvaluationReport 加载 RAG 样例评测报告。
+    async function loadRagEvaluationReport() {
+        // 读取结果容器。
+        const result = document.getElementById('ragResult');
+        // 读取按钮。
+        const button = document.getElementById('ragEvaluationBtn');
+        // 禁用按钮并展示忙碌文案。
+        setButtonBusy(button, true, '加载中');
+        // 展示加载状态。
+        renderPanelState(result, 'loading', '正在加载评测报告', '正在读取样例评测套件的汇总结果。');
+        // 尝试调用评测接口。
+        try {
+            // 调用样例评测报告接口。
+            const data = await apiJson('/xiaozhi/rag/evaluation/sample');
+            // 设置结果样式。
+            result.className = 'result-panel';
+            // 渲染评测摘要。
+            result.innerHTML = `<strong>${escapeHtml(data.suiteName || 'RAG评测报告')}</strong><br>总用例：${data.totalCases}，通过：${data.passedCases}，失败：${data.failedCases}，平均分：${Number(data.averageScore || 0).toFixed(2)}<div class="citation-list">${(data.results || []).map(item => `<div class="citation-item"><strong>${escapeHtml(item.caseName || '-')}</strong> · ${item.passed ? '通过' : '未通过'} · ${Number(item.score || 0).toFixed(2)}<br>${(item.findings || []).map(finding => `${finding.passed ? '✓' : '×'} ${finding.criterion}: ${finding.message}`).map(escapeHtml).join('<br>')}</div>`).join('')}</div>`;
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('RAG评测报告失败:', error);
+            // 展示失败样式。
+            renderPanelState(result, 'error', 'RAG 评测报告加载失败', '请稍后重试，或检查评测接口是否可用。');
+        } finally {
+            // 恢复按钮。
+            setButtonBusy(button, false, '加载中');
+        }
+    }
+
+    // sendMessage 发送聊天消息。
+    async function sendMessage(messageText) {
+        // 正在等待时禁止重复发送。
+        if (isWaiting) return;
+        // 如果没有当前会话，就先创建会话。
+        if (!currentSessionId) await createNewSession(false, true);
+        // 如果创建会话失败，当前没有 memoryId，就停止发送。
+        if (!currentSessionId) return;
+        // 准备消息文本。
+        let message = messageText;
+        // 如果没有传入快捷问题，就从输入框读取。
+        if (!message) {
+            // 读取输入框。
+            const input = document.getElementById('messageInput');
+            // 读取并修剪用户输入。
+            message = input.value.trim();
+            // 空消息不发送。
+            if (!message) return;
+            // 清空输入框。
+            input.value = '';
+            // 调整输入框高度。
+            autoResizeTextarea();
+        }
+        // 先把用户消息展示出来。
+        addUserMessageAndSave(message);
+        // 进入等待状态。
+        setBusy(true);
+        // 清空当前流式内容。
+        currentStreamingContent = '';
+        // 如果残留流式节点，就先移除。
+        if (currentStreamingDiv) {
+            // 移除残留节点。
+            currentStreamingDiv.remove();
+            // 清空引用。
+            currentStreamingDiv = null;
+        }
+        // 立即展示聊天加载态，避免长时间空等。
+        updateStreamingMessage('正在思考');
+        // 标记这是等待中占位消息。
+        if (currentStreamingDiv) currentStreamingDiv.classList.add('pending');
+        // 尝试调用聊天接口。
+        try {
+            // 创建请求控制器。
+            const controller = new AbortController();
+            // 联网搜索和模型整理可能需要更长时间，使用 120 秒客户端超时。
+            const timeoutId = setTimeout(() => controller.abort(), 120000);
+            // 调用后端聊天流式接口。
+            const response = await fetch(`${API_BASE}/xiaozhi/chat`, {
+                // 使用 POST 方法。
+                method: 'POST',
+                // 请求体是 JSON。
+                headers: { 'Content-Type': 'application/json' },
+                // 携带当前会话 ID 和用户消息。
+                body: JSON.stringify({ memoryId: currentSessionId, message: message }),
+                // 绑定超时控制器。
+                signal: controller.signal
+            });
+            // 成功收到响应后清理超时器。
+            clearTimeout(timeoutId);
+            // HTTP 状态码异常时抛错。
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            // 创建流式读取器。
+            const reader = response.body.getReader();
+            // 创建 UTF-8 解码器。
+            const decoder = new TextDecoder();
+            // 持续读取流式响应。
+            while (true) {
+                // 读取一段响应。
+                const { done, value } = await reader.read();
+                // 读取完成时退出循环。
+                if (done) break;
+                // 解码当前响应片段。
+                const chunk = decoder.decode(value, { stream: true });
+                // 追加到当前流式内容。
+                currentStreamingContent += chunk;
+                // 收到真实内容后移除等待占位样式。
+                if (currentStreamingDiv) currentStreamingDiv.classList.remove('pending');
+                // 更新页面上的流式消息。
+                updateStreamingMessage(currentStreamingContent);
+            }
+            // 把完整助手消息保存下来。
+            finishStreamingMessage(currentStreamingContent);
+        } catch (error) {
+            // 打印错误便于调试。
+            console.error('发送失败:', error);
+            // 如果有临时流式节点，就移除。
+            if (currentStreamingDiv) {
+                // 移除流式节点。
+                currentStreamingDiv.remove();
+                // 清空引用。
+                currentStreamingDiv = null;
+            }
+            // 设置默认错误文案。
+            let errorMsg = '抱歉，服务暂时不可用，请稍后再试。';
+            // 超时时使用更具体文案。
+            if (error.name === 'AbortError') errorMsg = '请求超时，请稍后重试。';
+            // 读取当前消息列表。
+            const messages = getMessages(currentSessionId);
+            // 追加错误消息。
+            messages.push({ role: 'assistant', content: errorMsg, timestamp: Date.now() });
+            // 保存当前会话消息。
+            saveMessages(currentSessionId, messages);
+            // 重新渲染消息。
+            renderMessages();
+        } finally {
+            // 恢复非等待状态。
+            setBusy(false);
+            // 清空流式内容。
+            currentStreamingContent = '';
+            // 清空流式节点引用。
+            currentStreamingDiv = null;
+            // 聚焦输入框。
+            document.getElementById('messageInput').focus();
+        }
+    }
+
+    // onKeyDown 处理回车发送。
+    function onKeyDown(e) {
+        // Enter 发送，Shift+Enter 换行。
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // 阻止 textarea 默认换行。
+            e.preventDefault();
+            // 发送输入框消息。
+            sendMessage();
+        }
+    }
+
+    // init 初始化页面。
+    async function init() {
+        // 页面初始化时先清理旧缓存，再加载后端清洗后的会话历史。
+        clearLegacyMessageCaches();
+        renderAuthMode();
+        document.getElementById('authForm').addEventListener('submit', submitAuth);
+        document.getElementById('authSwitchBtn').addEventListener('click', () => {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            renderAuthMode();
+            document.getElementById('authError').textContent = '';
+        });
+        document.getElementById('logoutBtn').addEventListener('click', logoutAccount);
+        document.getElementById('deleteAccountBtn').addEventListener('click', deleteAccount);
+        const authenticated = await loadAuthState();
+        document.getElementById('openMedicalFileBtn').addEventListener('click', openMedicalFileModal);
+        document.getElementById('attachMedicalFileBtn').addEventListener('click', openMedicalFileModal);
+        document.getElementById('closeMedicalFileBtn').addEventListener('click', closeMedicalFileModal);
+        document.getElementById('cancelMedicalFileBtn').addEventListener('click', closeMedicalFileModal);
+        document.getElementById('medicalFileForm').addEventListener('submit', handleMedicalFileUpload);
+        document.getElementById('medicalFileInput').addEventListener('change', event => {
+            const file = event.target.files[0];
+            renderMedicalFilePreview(file);
+            if (file && file.type.startsWith('image/')) {
+                document.getElementById('medicalFileCategory').value = 'MEDICAL_IMAGE';
+            }
+        });
+        document.getElementById('medicalFileResult').addEventListener('click', event => {
+            const button = event.target.closest('.file-operation-btn');
+            if (button) runMedicalFileOperation(button.dataset.operation);
+        });
+        document.getElementById('medicalFileModal').addEventListener('click', event => {
+            if (event.target.id === 'medicalFileModal') closeMedicalFileModal();
+        });
+        // 给发送按钮绑定点击事件。
+        document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
+        // 给新会话按钮绑定点击事件。
+        document.getElementById('newChatBtn').addEventListener('click', () => createNewSession(true));
+        // 给预约挂号按钮绑定打开表单事件。
+        document.getElementById('openAppointmentBtn').addEventListener('click', openAppointmentForm);
+        // 给我的预约按钮绑定打开查询弹窗事件。
+        document.getElementById('openMyAppointmentsBtn').addEventListener('click', openMyAppointmentsModal);
+        // 给 RAG 问答按钮绑定打开 RAG 弹窗事件。
+        document.getElementById('openRagBtn').addEventListener('click', openRagModal);
+        // 给清空对话按钮绑定清空当前会话事件。
+        document.getElementById('clearConversationBtn').addEventListener('click', clearCurrentConversation);
+        // 给预约弹窗关闭按钮绑定关闭事件。
+        document.getElementById('closeAppointmentBtn').addEventListener('click', closeAppointmentForm);
+        // 给预约弹窗取消按钮绑定关闭事件。
+        document.getElementById('cancelAppointmentFormBtn').addEventListener('click', closeAppointmentForm);
+        // 给预约表单绑定提交事件。
+        document.getElementById('appointmentForm').addEventListener('submit', submitAppointmentForm);
+        // 给我的预约关闭按钮绑定关闭事件。
+        document.getElementById('closeMyAppointmentsBtn').addEventListener('click', closeMyAppointmentsModal);
+        // 给我的预约表单关闭按钮绑定关闭事件。
+        document.getElementById('closeMyAppointmentsFormBtn').addEventListener('click', closeMyAppointmentsModal);
+        // 给我的预约查询表单绑定提交事件。
+        document.getElementById('appointmentSearchForm').addEventListener('submit', searchAppointments);
+        // 给 RAG 弹窗关闭按钮绑定关闭事件。
+        document.getElementById('closeRagBtn').addEventListener('click', closeRagModal);
+        // 给 RAG 回答表单绑定提交事件。
+        document.getElementById('ragForm').addEventListener('submit', submitRagAnswer);
+        // 给 RAG 上下文调试按钮绑定点击事件。
+        document.getElementById('ragContextBtn').addEventListener('click', previewRagContext);
+        // 给 RAG 评测报告按钮绑定点击事件。
+        document.getElementById('ragEvaluationBtn').addEventListener('click', loadRagEvaluationReport);
+        // 科室变化时刷新日期日历和医生选项。
+        document.getElementById('appointmentDepartment').addEventListener('change', refreshAppointmentScheduleFilters);
+        // 点击日期展示按钮时打开或关闭日历。
+        document.getElementById('appointmentDateDisplay').addEventListener('click', toggleAppointmentCalendar);
+        // 年份变化时刷新日历。
+        document.getElementById('appointmentYearSelect').addEventListener('change', event => {
+            // 保存用户选择的年份。
+            appointmentCalendarYear = Number(event.target.value);
+            // 重新渲染日历。
+            renderAppointmentCalendar();
+        });
+        // 月份变化时刷新日历。
+        document.getElementById('appointmentMonthSelect').addEventListener('change', event => {
+            // 保存用户选择的月份。
+            appointmentCalendarMonth = Number(event.target.value);
+            // 重新渲染日历。
+            renderAppointmentCalendar();
+        });
+        // 上一月按钮切换日历月份。
+        document.getElementById('appointmentPrevMonthBtn').addEventListener('click', () => {
+            // 当前是一月时切到上一年十二月。
+            if (appointmentCalendarMonth === 0) {
+                // 年份减一。
+                appointmentCalendarYear -= 1;
+                // 月份切到十二月。
+                appointmentCalendarMonth = 11;
+            } else {
+                // 普通情况月份减一。
+                appointmentCalendarMonth -= 1;
+            }
+            // 重新渲染日历。
+            renderAppointmentCalendar();
+        });
+        // 下一月按钮切换日历月份。
+        document.getElementById('appointmentNextMonthBtn').addEventListener('click', () => {
+            // 当前是十二月时切到下一年一月。
+            if (appointmentCalendarMonth === 11) {
+                // 年份加一。
+                appointmentCalendarYear += 1;
+                // 月份切到一月。
+                appointmentCalendarMonth = 0;
+            } else {
+                // 普通情况月份加一。
+                appointmentCalendarMonth += 1;
+            }
+            // 重新渲染日历。
+            renderAppointmentCalendar();
+        });
+        // 时间段变化时刷新日期日历和医生选项。
+        document.getElementById('appointmentTimeSlot').addEventListener('change', refreshAppointmentScheduleFilters);
+        // 点击弹窗遮罩空白处时关闭弹窗。
+        document.getElementById('appointmentModal').addEventListener('click', event => {
+            // 只有点到遮罩本身时才关闭，点到表单内部不关闭。
+            if (event.target.id === 'appointmentModal') closeAppointmentForm();
+        });
+        // 点击我的预约遮罩空白处时关闭弹窗。
+        document.getElementById('myAppointmentsModal').addEventListener('click', event => {
+            // 只有点到遮罩本身时才关闭，点到表单内部不关闭。
+            if (event.target.id === 'myAppointmentsModal') closeMyAppointmentsModal();
+        });
+        // 点击 RAG 遮罩空白处时关闭弹窗。
+        document.getElementById('ragModal').addEventListener('click', event => {
+            // 只有点到遮罩本身时才关闭，点到表单内部不关闭。
+            if (event.target.id === 'ragModal') closeRagModal();
+        });
+        // 点击页面其他地方时关闭日期日历。
+        document.addEventListener('click', event => {
+            // 如果点击不在日期控件内部，就关闭日历。
+            if (!event.target.closest('.date-picker-field')) closeAppointmentCalendar();
+        });
+        // 获取输入框。
+        const textarea = document.getElementById('messageInput');
+        // 绑定输入框自动高度。
+        textarea.addEventListener('input', autoResizeTextarea);
+        // 绑定回车发送。
+        textarea.addEventListener('keydown', onKeyDown);
+        // 给快捷问题绑定点击事件。
+        document.querySelectorAll('.quick-question').forEach(el => {
+            // 监听快捷问题点击。
+            el.addEventListener('click', () => {
+                // 如果快捷入口是预约表单，就打开表单。
+                if (el.dataset.action === 'appointment') {
+                    // 打开结构化预约表单。
+                    openAppointmentForm();
+                    // 结束当前点击流程。
+                    return;
+                }
+                // 如果快捷入口是我的预约，就打开预约查询弹窗。
+                if (el.dataset.action === 'my-appointments') {
+                    // 打开我的预约弹窗。
+                    openMyAppointmentsModal();
+                    // 结束当前点击流程。
+                    return;
+                }
+                // 如果快捷入口是 RAG 问答，就打开 RAG 工具弹窗。
+                if (el.dataset.action === 'rag') {
+                    // 打开 RAG 弹窗。
+                    openRagModal();
+                    // 结束当前点击流程。
+                    return;
+                }
+                // 读取快捷问题文本。
+                const question = el.dataset.question;
+                // 有问题文本且非等待状态时发送。
+                if (question && !isWaiting) sendMessage(question);
+            });
+        });
+        // 尝试加载后端会话列表。
+        try {
+            if (authenticated) await loadConversationSessions();
+        } catch (error) {
+            // 打印初始化错误。
+            console.error('加载会话失败:', error);
+            // 展示错误状态。
+            document.getElementById('sessionList').innerHTML = '<div style="padding:16px;color:#b91c1c;font-size:0.8rem;">会话加载失败，请确认后端服务已启动。</div>';
+            // 展示 toast。
+            showToast('会话加载失败');
+        }
+        // 聚焦输入框。
+        (authenticated ? textarea : document.getElementById('authUsername')).focus();
+    }
+
+    // 启动页面。
+    init();
+</script>
+</body>
+</html>

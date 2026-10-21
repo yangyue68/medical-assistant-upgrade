@@ -1,0 +1,19 @@
+{
+  "datasets": [
+    {
+      "id": "pumch-patient-department-pages-2026-07-31",
+      "name": "北京协和医院患者版科室页面",
+      "provider": "北京协和医院",
+      "officialPage": "https://www.pumch.cn/patient",
+      "downloadedAt": "2026-07-31",
+      "language": ["中文"],
+      "topicCount": 51,
+      "rawDirectory": "docs/knowledge/raw/pumch/2026-07-31/department-pages/",
+      "downloadManifest": "docs/knowledge/raw/pumch/2026-07-31/department-pages-manifest.json",
+      "documentType": "HOSPITAL_INFO",
+      "licenseNote": "保留官网原始 HTML 供可重复解析和来源审计；仅抽取科室简介正文进入 RAG，不导入动态号源、公告、页眉页脚或医生个人信息。正式商用前应再次确认官网内容使用范围。",
+      "reason": "使用真实、中文、可追溯的医院患者版科室介绍，避免英文语料混杂和人工摘要不完整问题。",
+      "plannedUse": "由 PumchDepartmentPageHtmlParser 提取 div.ksjj 科室简介，再通过 PumchDepartmentPageIngestionRunner 切分并写入 Elasticsearch。"
+    }
+  ]
+}
